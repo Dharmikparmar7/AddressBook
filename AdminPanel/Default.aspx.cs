@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -9,42 +10,39 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_Default : System.Web.UI.Page
 {
+    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         if (Session["UserID"] == null)
-        {
             Response.Redirect("~/AddressBook/AdminPanel/Login");
-            return;
-        }
+
         if (!IsPostBack)
         {
-            fillDropdown();
+            fillContact();
         }
     }
+    #endregion
+
+    #region Delete
     protected void gvContact_RowCommand(object sender, GridViewCommandEventArgs e)
     {
         try
         {
-            SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand();
-
-            cmd.Connection = conn;
+            SqlCommand cmd = new SqlCommand("PR_Contact_DeleteByPK", conn);
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.CommandText = "PR_Contact_DeleteByPK";
+            cmd.Parameters.AddWithValue("@ContactID", DBNullOrStringValue(e.CommandArgument.ToString()));
 
-            cmd.Parameters.AddWithValue("@ContactID", e.CommandArgument.ToString());
-
-            cmd.ExecuteScalar();
+            cmd.ExecuteNonQuery();
 
             conn.Close();
 
-            fillDropdown();
-
+            fillContact();
         }
         catch(SqlException exec)
         {
@@ -54,24 +52,20 @@ public partial class AdminPanel_Default : System.Web.UI.Page
             }
         }
     }
+    #endregion
 
-    private void fillDropdown()
+    #region FillContactGridView
+    private void fillContact()
     {
-        SqlConnection conn = new SqlConnection();
-
-        conn.ConnectionString = "data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;";
+        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         conn.Open();
 
-        SqlCommand cmd = new SqlCommand();
-
-        cmd.Connection = conn;
+        SqlCommand cmd = new SqlCommand("PR_Contact_SelectAllByUserID", conn);
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.CommandText = "PR_Contact_SelectAllByUserID";
-
-        cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -80,5 +74,15 @@ public partial class AdminPanel_Default : System.Web.UI.Page
         gvContact.DataBind();
 
         conn.Close();
+    }
+    #endregion
+
+    private Object DBNullOrStringValue(String val)
+    {
+        if (String.IsNullOrEmpty(val))
+        {
+            return DBNull.Value;
+        }
+        return val;
     }
 }

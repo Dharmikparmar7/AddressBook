@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -9,35 +10,34 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_State_StateList : System.Web.UI.Page
 {
+    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         if (Session["UserID"] == null)
         {
             Response.Redirect("~/AddressBook/AdminPanel/Login");
-            return;
         }
         if (!IsPostBack)
         {
-            fillDropdown();
+            fillState();
         }
     }
+    #endregion
+
+    #region Delete
     protected void gvState_RowCommand(object sender, GridViewCommandEventArgs e)
     {
         try
         {
-            SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand();
-
-            cmd.Connection = conn;
+            SqlCommand cmd = new SqlCommand("PR_State_DeleteByPK", conn);
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.CommandText = "PR_State_DeleteByPK";
-
-            cmd.Parameters.AddWithValue("@StateID", e.CommandArgument.ToString());
+            cmd.Parameters.AddWithValue("@StateID", DBNullOrStringValue(e.CommandArgument.ToString()));
 
             cmd.ExecuteScalar();
 
@@ -52,27 +52,23 @@ public partial class AdminPanel_State_StateList : System.Web.UI.Page
         }
         finally
         {
-            fillDropdown();
+            fillState();
         }
     }
+    #endregion
 
-    private void fillDropdown()
+    #region FillStateGridView
+    private void fillState()
     {
-        SqlConnection conn = new SqlConnection();
-
-        conn.ConnectionString = "data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;";
+        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         conn.Open();
 
-        SqlCommand cmd = new SqlCommand();
-
-        cmd.Connection = conn;
+        SqlCommand cmd = new SqlCommand("PR_State_SelectAllByUserID", conn);
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.CommandText = "PR_State_SelectAllByUserID";
-
-        cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -81,5 +77,15 @@ public partial class AdminPanel_State_StateList : System.Web.UI.Page
         gvState.DataBind();
 
         conn.Close();
+    }
+    #endregion
+
+    private Object DBNullOrStringValue(String val)
+    {
+        if (String.IsNullOrEmpty(val))
+        {
+            return DBNull.Value;
+        }
+        return val;
     }
 }

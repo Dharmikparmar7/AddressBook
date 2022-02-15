@@ -56,9 +56,10 @@
 
                                     <div class="d-flex justify-content-center">
                                         <asp:Button ID="btnLogin" runat="server" Text="Login" CssClass="btn btn-success btn-block btn-lg gradient-custom-4 text-body" OnClick="btnLogin_Click" />
+                                    </div>
+                                    <div class="d-flex justify-content-center mt-4">
                                         <asp:Label runat="server" ID="lblMsg"></asp:Label>
                                     </div>
-
                                     <p class="text-center text-muted mt-5 mb-0">Didn't Register ? <a href="#!" class="fw-bold text-body"><u><asp:HyperLink ID="hlRegister" NavigateUrl="~/AddressBook/AdminPanel/Register" CssClass="fw-bold text-body" runat="server">Register Here</asp:HyperLink></u></a></p>
                                 </div>
                             </div>

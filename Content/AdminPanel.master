@@ -7,15 +7,32 @@
     <title></title>
     <link href="~/Content/css/bootstrap.min.css" rel="stylesheet" />
 
-    <%--<script src="~/Content/js/bootstrap.min.js"></script>--%>
+    <script src="~/Content/js/bootstrap.min.js"></script>
 
-    <%--<script src="~/Content/js/jquery.min.js"></script>--%>
+    <script src="~/Content/js/jquery.min.js"></script>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous">
         
     </script>
 
+    <style>
+        html, body {
+            height: 100%;
+        }
 
+        .footer {   
+            height: 50px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .scroll {
+            width:100%;
+            max-height: 400px;
+            overflow-y: scroll;
+        }
+    </style>
 
     <asp:ContentPlaceHolder ID="head" runat="server">
     </asp:ContentPlaceHolder>
@@ -44,6 +61,9 @@
                         <li class="nav-item ">
                             <asp:HyperLink runat="server" ID="Country" NavigateUrl="~/AddressBook/AdminPanel/Country/Display" CssClass="nav-link"> Country </asp:HyperLink>
                         </li>
+                        <li class="nav-item">
+                            <asp:Label runat="server" ID="lbl1" CssClass="nav-link"></asp:Label>
+                        </li>
                     </ul>
                 </div>
 
@@ -61,8 +81,11 @@
                 <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
                 </asp:ContentPlaceHolder>
             </div>
-
-        </div>
+            <div class="w-100 footer bg-dark">
+                <div class="p-2">
+                    <p class="text-white text-center ">Dharmik Parmar | 190540107153 </p>
+                </div>
+            </div>
     </form>
     <script>
         $(document).ready(function () {

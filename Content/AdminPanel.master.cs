@@ -7,35 +7,33 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel : System.Web.UI.MasterPage
 {
+    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
-
         if (Session["UserID"] == null)
         {
             Response.Redirect("~/AddressBook/AdminPanel/Login");
-            return;
         }
 
-        if(!IsPostBack)
+        if (!Page.IsPostBack)
         {
-            if(Session["UserID"] == null)
+            if (Session["ImgProfile"] != null)
             {
-                Response.Redirect("~/AddressBook/AdminPanel/Login");
+                imgProfile.ImageUrl = Session["ImgProfile"].ToString();
             }
-            else
-            {
-                if(Session["ImgProfile"] != null)
-                {
-                    imgProfile.ImageUrl = Session["ImgProfile"].ToString();
-                }
-                lbl.Text = Session["FullName"].ToString();
-            }
+            lbl.Text = Session["FullName"].ToString();
         }
     }
+    #endregion
 
+    #region LogOut
     protected void btnLogOut_Click(object sender, EventArgs e)
     {
         Session.Clear();
+        Session.RemoveAll();
+        Session.Abandon();
+
         Response.Redirect("~/AddressBook/AdminPanel/Login");
     }
+    #endregion
 }

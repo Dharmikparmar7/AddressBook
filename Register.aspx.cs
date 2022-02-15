@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -13,35 +14,31 @@ public partial class Register : System.Web.UI.Page
     {
 
     }
+
+    #region Register
     protected void btnRegister_Click(object sender, EventArgs e)
     {
         try
         {
-            fuImage.SaveAs(Server.MapPath("~/Content/Image/" + fuImage.FileName));
-
-            SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand();
-
-            cmd.Connection = conn;
+            SqlCommand cmd = new SqlCommand("PR_UserMaster_RegisterUser", conn);
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.CommandText = "PR_UserMaster_RegisterUser";
+            cmd.Parameters.AddWithValue("@FullName", DBNullOrStringValue(txtFullName.Text));
 
-            cmd.Parameters.AddWithValue("@FullName", txtFullName.Text);
+            cmd.Parameters.AddWithValue("@UserName", DBNullOrStringValue(txtUserName.Text));
 
-            cmd.Parameters.AddWithValue("@UserName", txtUserName.Text);
+            cmd.Parameters.AddWithValue("@Password", DBNullOrStringValue(txtPassword.Text));
 
-            cmd.Parameters.AddWithValue("@Password", txtPassword.Text);
+            cmd.Parameters.AddWithValue("@Address", DBNullOrStringValue(txtAddress.Text));
 
-            cmd.Parameters.AddWithValue("@Address", txtAddress.Text);
+            cmd.Parameters.AddWithValue("@MobileNo", DBNullOrStringValue(txtMobileNo.Text));
 
-            cmd.Parameters.AddWithValue("@MobileNo", txtMobileNo.Text);
-
-            cmd.Parameters.AddWithValue("@Email", txtEmail.Text);
+            cmd.Parameters.AddWithValue("@Email", DBNullOrStringValue(txtEmail.Text));
 
             cmd.Parameters.AddWithValue("@PhotoPath", "~/Content/Image/" + fuImage.FileName);
 
@@ -49,7 +46,7 @@ public partial class Register : System.Web.UI.Page
 
             SqlDataReader read = cmd.ExecuteReader();
 
-            lblMsg.Text = "Registered";
+            fuImage.SaveAs(Server.MapPath("~/Content/Image/" + fuImage.FileName));
 
             Response.Redirect("~/AddressBook/AdminPanel/Login");
         }
@@ -59,5 +56,15 @@ public partial class Register : System.Web.UI.Page
             if(ex.Number == 2601)
                 lblMsg.Text = "This Username is already exist";
         }
+    }
+    #endregion
+
+    private Object DBNullOrStringValue(String val)
+    {
+        if (String.IsNullOrEmpty(val))
+        {
+            return DBNull.Value;
+        }
+        return val;
     }
 }

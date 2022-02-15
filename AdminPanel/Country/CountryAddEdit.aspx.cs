@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -9,13 +10,14 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
 {
+    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         if (Session["UserID"] == null)
         {
             Response.Redirect("~/AddressBook/AdminPanel/Login");
-            return;
         }
+
         if (!IsPostBack)
         {
             txtCountryName.Focus();
@@ -24,17 +26,13 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
             {
                 btnAdd.Text = "Save";
 
-                SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
+                SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
                 conn.Open();
 
-                SqlCommand cmd = new SqlCommand();
-
-                cmd.Connection = conn;
+                SqlCommand cmd = new SqlCommand("PR_Country_SelectByPK", conn);
 
                 cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.CommandText = "PR_Country_SelectByPK";
 
                 cmd.Parameters.AddWithValue("@CountryID", Page.RouteData.Values["CountryID"]);
 
@@ -44,8 +42,13 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
                 {
                     while (read.Read())
                     {
-                        txtCountryCode.Text = read["CountryCode"].ToString();
-                        txtCountryName.Text = read["CountryName"].ToString();
+                        if(!read["CountryCode"].Equals(DBNull.Value))
+                            txtCountryCode.Text = read["CountryCode"].ToString();
+
+                        if (!read["CountryName"].Equals(DBNull.Value))
+                            txtCountryName.Text = read["CountryName"].ToString();
+
+                        
                     }
                 }
 
@@ -53,31 +56,50 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
             }
         }
     }
+    #endregion
+
+    #region Add and Edit
     protected void btnAdd_Click(object sender, EventArgs e)
     {
-        if (Page.RouteData.Values["CountryID"] != null)
+        #region Server Side Validation
+        String strErrorMessage = "";
+
+        if (txtCountryName.Text.Trim() == "")
         {
-            try
+            strErrorMessage += "Enter Country Name <br/>";
+        }
+
+        if (strErrorMessage != "")
+        {
+            lblMsg.Text = strErrorMessage;
+            return;
+        }
+        #endregion Server Side Validation
+
+        try
+        {
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand();
+
+            cmd.Connection = conn;
+
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@CountryName", DBNullOrStringValue(txtCountryName.Text));
+
+            cmd.Parameters.AddWithValue("@CountryCode", DBNullOrStringValue(txtCountryCode.Text));
+
+            cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
+
+
+            if (Page.RouteData.Values["CountryID"] != null)
             {
-                SqlConnection conn = new SqlConnection("data source = DHARMIK-PARMAR; initial catalog = AddressBook; integrated security = true;");
-
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand();
-
-                cmd.Connection = conn;
-
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.CommandText = "PR_Country_UpdateByPK";
-
                 cmd.Parameters.AddWithValue("@CountryID", Page.RouteData.Values["CountryID"].ToString());
 
-                cmd.Parameters.AddWithValue("@CountryName", txtCountryName.Text);
-
-                cmd.Parameters.AddWithValue("@CountryCode", txtCountryCode.Text);
-
-                cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
+                cmd.CommandText = "PR_Country_UpdateByPK";
 
                 cmd.ExecuteNonQuery();
 
@@ -87,38 +109,11 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
 
                 Response.Redirect("~/AddressBook/AdminPanel/Country/Display");
             }
-            catch (SqlException exec)
+            else
             {
-                if (exec.Number == 2627)
-                {
-                    lblMsg.Text = "Cannot insert duplicate value";
-                    txtCountryName.Focus();
-                }
-            }
-        }
-        else
-        {
-            try
-            {
-                SqlConnection conn = new SqlConnection("data source = DHARMIK-PARMAR; initial catalog = AddressBook; integrated security = true;");
-                    
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand();
-
-                cmd.Connection = conn;
-
-                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
 
                 cmd.CommandText = "PR_Country_Insert";
-
-                cmd.Parameters.AddWithValue("@CountryName", txtCountryName.Text);
-
-                cmd.Parameters.AddWithValue("@CountryCode", txtCountryCode.Text);
-
-                cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
-
-                cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
 
                 cmd.ExecuteNonQuery();
 
@@ -129,14 +124,28 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
                 txtCountryCode.Text = "";
                 txtCountryName.Text = "";
             }
-            catch (SqlException exec)
+        }
+        catch (SqlException exec)
+        {
+            if (exec.Number == 2627)
             {
-                if (exec.Number == 2627)
-                {
-                    lblMsg.Text = "Cannot insert duplicate value";
-                    txtCountryName.Focus();
-                }
+                lblMsg.Text = "Cannot insert duplicate value";
+                txtCountryName.Focus();
+            }
+            else
+            {
+                lblMsg.Text = exec.Message.ToString();
             }
         }
+    }
+    #endregion
+
+    private Object DBNullOrStringValue(String val)
+    {
+        if(String.IsNullOrEmpty(val))
+        {
+            return DBNull.Value;
+        }
+        return val;
     }
 }

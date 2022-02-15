@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -9,12 +10,12 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_City_CityList : System.Web.UI.Page
 {
+    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         if (Session["UserID"] == null)
         {
             Response.Redirect("~/AddressBook/AdminPanel/Login");
-            return;
         }
 
         if (!IsPostBack)
@@ -22,27 +23,24 @@ public partial class AdminPanel_City_CityList : System.Web.UI.Page
             fillcity();
         }
     }
+    #endregion
 
-    //Delete
+    #region Delete
     protected void gvCity_RowCommand(object sender, GridViewCommandEventArgs e)
     {
         try
         {
-            SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand();
-
-            cmd.Connection = conn;
+            SqlCommand cmd = new SqlCommand("PR_City_DeleteByPK", conn);
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.CommandText = "PR_City_DeleteByPK";
+            cmd.Parameters.AddWithValue("@CityID", DBNullOrStringValue(e.CommandArgument.ToString()));
 
-            cmd.Parameters.AddWithValue("@CityID", e.CommandArgument.ToString());
-
-            cmd.ExecuteScalar();
+            cmd.ExecuteNonQuery();
 
             conn.Close();
 
@@ -58,23 +56,20 @@ public partial class AdminPanel_City_CityList : System.Web.UI.Page
         }
 
     }
+    #endregion
 
+    #region FillCity
     private void fillcity()
     {
-        SqlConnection conn = new SqlConnection();
-
-        conn.ConnectionString = "data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;";
+        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         conn.Open();
-        SqlCommand cmd = new SqlCommand();
 
-        cmd.Connection = conn;
+        SqlCommand cmd = new SqlCommand("PR_City_SelectAllByUserID", conn);
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.CommandText = "PR_City_SelectAllByUserID";
-
-        cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -83,5 +78,15 @@ public partial class AdminPanel_City_CityList : System.Web.UI.Page
         gvCity.DataBind();
 
         conn.Close();
+    }
+    #endregion
+
+    private Object DBNullOrStringValue(String val)
+    {
+        if (String.IsNullOrEmpty(val))
+        {
+            return DBNull.Value;
+        }
+        return val;
     }
 }

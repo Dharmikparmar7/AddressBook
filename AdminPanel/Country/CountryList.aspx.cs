@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -9,34 +10,33 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_Country_CountryList : System.Web.UI.Page
 {
+    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         if (Session["UserID"] == null)
         {
             Response.Redirect("~/AddressBook/AdminPanel/Login");
-            return;
         }
         if (!IsPostBack)
         {
-            fillDropdown();
+            fillCountry();
         }
     }
+    #endregion
 
+
+    #region Delete
     protected void gvCountry_RowCommand(object sender, GridViewCommandEventArgs e)
     {
         try
         {
-            SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
             conn.Open();
 
-            SqlCommand cmd = new SqlCommand();
-
-            cmd.Connection = conn;
+            SqlCommand cmd = new SqlCommand("PR_Country_DeleteByPK", conn);
 
             cmd.CommandType = CommandType.StoredProcedure;
-
-            cmd.CommandText = "PR_Country_DeleteByPK";
 
             cmd.Parameters.AddWithValue("@CountryID", e.CommandArgument.ToString());
 
@@ -53,25 +53,22 @@ public partial class AdminPanel_Country_CountryList : System.Web.UI.Page
         }
         finally
         {
-            fillDropdown();
+            fillCountry();
         }
     }
+    #endregion
 
-    private void fillDropdown()
+
+    #region FillCountry
+    private void fillCountry()
     {
-        SqlConnection conn = new SqlConnection();
-
-        conn.ConnectionString = "data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;";
+        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         conn.Open();
 
-        SqlCommand cmd = new SqlCommand();
-
-        cmd.Connection = conn;
+        SqlCommand cmd = new SqlCommand("PR_Country_SelectAllByUserID", conn);
 
         cmd.CommandType = CommandType.StoredProcedure;
-
-        cmd.CommandText = "PR_Country_SelectAllByUserID";
 
         cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
 
@@ -83,4 +80,5 @@ public partial class AdminPanel_Country_CountryList : System.Web.UI.Page
 
         conn.Close();
     }
+    #endregion
 }

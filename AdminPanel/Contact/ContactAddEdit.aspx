@@ -19,11 +19,18 @@
             border-radius: 15px;
             width: 100%;
             height: 100%;
+            margin-bottom:150px;
+        }
+
+        .scroll2 {
+            width:100%;
+            height: 600px;
+            overflow: scroll;
         }
     </style>
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" Runat="Server">
-    <div class="container">
+    <div class="container pb-1" >
             <div class="myContainer">
                 <div class="form-group">
                     <div class="row text-center">

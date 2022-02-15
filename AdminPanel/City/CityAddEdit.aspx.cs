@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -10,19 +11,19 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 {
+    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["UserID"] == null)
-        {
-            Response.Redirect("~/AddressBook/AdminPanel/Login");
-            return;
-        }
-
         if (!IsPostBack)
         {
+            if (Session["UserID"] == null)
+            {
+                Response.Redirect("~/AddressBook/AdminPanel/Login");
+            }
+
             txtCityName.Focus();
 
-            loadControls();
+            fillCountry();
 
             if (Page.RouteData.Values["CityID"] != null)
             {
@@ -42,26 +43,20 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
         }
     }
+    #endregion
 
+    #region LoadControls
     private void loadControlsByPK()
     {
-        SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
+        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         conn.Open();
 
-        SqlCommand cmd = new SqlCommand();
-
-        cmd.Connection = conn;
+        SqlCommand cmd = new SqlCommand("PR_City_SelectByPK", conn);
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.CommandText = "PR_City_SelectByPK";
-
-        int CityID = 0;
-
-        int.TryParse(Page.RouteData.Values["CityID"].ToString(), out CityID);
-
-        cmd.Parameters.AddWithValue("@CityID", CityID);
+        cmd.Parameters.AddWithValue("@CityID", DBNullOrStringValue(Page.RouteData.Values["CityID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -69,53 +64,43 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
         {
             while (read.Read())
             {
-                txtCityName.Text = read["CityName"].ToString();
-                txtPincode.Text = read["Pincode"].ToString();
-                txtSTDCode.Text = read["STDCode"].ToString();
-                ddlCountry.SelectedValue = read["CountryID"].ToString();
-                ddlState.SelectedValue = read["StateID"].ToString();
+                if (!read["CityName"].Equals(DBNull.Value))
+                    txtCityName.Text = read["CityName"].ToString();
+
+                if (!read["Pincode"].Equals(DBNull.Value))
+                    txtPincode.Text = read["Pincode"].ToString();
+
+                if (!read["STDCode"].Equals(DBNull.Value))
+                    txtSTDCode.Text = read["STDCode"].ToString();
+
+                if (!read["CountryID"].Equals(DBNull.Value))
+                    ddlCountry.SelectedValue = read["CountryID"].ToString();
+
+                if (!read["StateID"].Equals(DBNull.Value))
+                    ddlState.SelectedValue = read["StateID"].ToString();
             }
         }
 
         read.Close();
-        cmd.Parameters.Clear();
 
-        cmd.CommandText = "PR_State_DropdownByUserID";
-
-        cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
-
-        cmd.Parameters.AddWithValue("@CountryID", ddlCountry.SelectedValue.ToString());
-
-        read = cmd.ExecuteReader();
-
-        ddlState.DataSource = read;
-
-        ddlState.DataTextField = "StateName";
-
-        ddlState.DataValueField = "StateID";
-
-        ddlState.DataBind();
+        fillState();
 
         conn.Close();
     }
+    #endregion LoadControls
 
-    private void loadControls()
+    #region FillCountry
+    private void fillCountry()
     {
-        SqlConnection conn = new SqlConnection();
-
-        conn.ConnectionString = "data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;";
+        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         conn.Open();
 
-        SqlCommand cmd = new SqlCommand();
-
-        cmd.Connection = conn;
+        SqlCommand cmd = new SqlCommand("PR_Country_SelectAllByUserID", conn);
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.CommandText = "PR_Country_SelectAllByUserID";
-
-        cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -129,42 +114,24 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
         read.Close();
 
-        //cmd.CommandText = "PR_State_DropdownByUserID";
-
-        //cmd.Parameters.AddWithValue("@CountryID", ddlCountry.SelectedValue.ToString());
-
-        //read = cmd.ExecuteReader();
-
-        //ddlState.DataSource = read;
-
-        //ddlState.DataTextField = "StateName";
-
-        //ddlState.DataValueField = "StateID";
-
-        //ddlState.DataBind();
-
         conn.Close();
     }
+    #endregion
 
-    protected void ddlCountry_SelectedIndexChanged(object sender, EventArgs e)
+    #region FillState
+    protected void fillState()
     {
-        ddlCountry.Items.Remove(new ListItem("Select Country", "-1"));
+        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
-        SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
-
-        SqlCommand cmd = new SqlCommand();
+        SqlCommand cmd = new SqlCommand("PR_State_DropdownByUserID", conn);
 
         conn.Open();
 
-        cmd.Connection = conn;
-
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.CommandText = "PR_State_DropdownByUserID";
+        cmd.Parameters.AddWithValue("@CountryID", DBNullOrStringValue(ddlCountry.SelectedValue.ToString()));
 
-        cmd.Parameters.AddWithValue("@CountryID", ddlCountry.SelectedValue.ToString());
-
-        cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -176,146 +143,135 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
         ddlState.DataBind();
 
+        conn.Close();
+    }
+    #endregion
+
+    #region Add and Edit
+    protected void btnAddCity_Click(object sender, EventArgs e)
+    {
+        #region Server Side Validation
+        String strErrorMessage = "";
+
+        if(ddlCountry.SelectedItem.Text == "Select Country")
+        {
+            strErrorMessage += "Select Country <br/>";
+        }
+        if (ddlState.SelectedItem.Text == "Select State")
+        {
+            strErrorMessage += "Select State<br/>";
+        }
+        if (txtCityName.Text.Trim() == "")
+        {
+            strErrorMessage += "Enter City Name<br/>";
+        }
+        if (strErrorMessage.Trim() != "")
+        {
+            txtMsg.Text = strErrorMessage;
+            return;
+        }
+        #endregion Server Side Validation
+
+        try
+        {
+
+            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+
+            conn.Open();
+
+            SqlCommand cmd = new SqlCommand();
+
+            cmd.Connection = conn;
+
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@CityName", DBNullOrStringValue(txtCityName.Text));
+
+            cmd.Parameters.AddWithValue("@Pincode", DBNullOrStringValue(txtPincode.Text));
+
+            cmd.Parameters.AddWithValue("@STDCode", DBNullOrStringValue(txtSTDCode.Text));
+
+            cmd.Parameters.AddWithValue("@StateID", DBNullOrStringValue(ddlState.SelectedValue.ToString()));
+
+            if (Page.RouteData.Values["CityID"] != null)
+            {
+                cmd.Parameters.AddWithValue("@CityID", DBNullOrStringValue(Page.RouteData.Values["CityID"].ToString()));
+
+                cmd.CommandText = "PR_City_UpdateByPK";
+
+                cmd.ExecuteNonQuery();
+
+                txtMsg.Text = "Data Updated Successfully";
+
+                Response.Redirect("~/AddressBook/AdminPanel/City/Display");
+            }
+            else
+            {
+                cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+
+                cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
+
+                cmd.CommandText = "PR_City_Insert";
+
+                cmd.ExecuteNonQuery();
+
+                txtMsg.Text = "Data Inserted Successfully";
+                txtCityName.Text = "";
+                txtPincode.Text = "";
+                txtSTDCode.Text = "";
+
+                ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
+
+                ddlCountry.SelectedValue = "-1";
+
+                ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
+
+                ddlState.SelectedValue = "-1";
+            }
+
+            conn.Close();
+        }
+
+        catch (SqlException exec)
+        {
+            if (exec.Number == 2627)
+            {
+                txtMsg.Text = "Cannot insert duplicate value";
+                txtCityName.Focus();
+            }
+            else
+            {
+                txtMsg.Text = exec.Message.ToString();
+            }
+        }
+    }
+    #endregion
+    
+    protected void ddlCountry_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        ddlCountry.Items.Remove(new ListItem("Select Country", "-1"));
+
+        fillState();
+
         ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
 
         ddlState.SelectedValue = "-1";
 
-        conn.Close();
-
         txtMsg.Text = "";
     }
-
+    
     protected void ddlState_SelectedIndexChanged(object sender, EventArgs e)
     {
         ddlState.Items.Remove(new ListItem("Select State", "-1"));
         txtMsg.Text = "";
     }
 
-    protected void btnAddCity_Click(object sender, EventArgs e)
+    private Object DBNullOrStringValue(String val)
     {
-        if (Page.RouteData.Values["CityID"] != null)
+        if (String.IsNullOrEmpty(val))
         {
-            updateCity();
+            return DBNull.Value;
         }
-        else
-        {
-            addCity();
-
-        }
-    }
-
-    private void addCity()
-    {
-        try
-        {
-
-            SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
-
-            conn.Open();
-
-            SqlCommand cmd = new SqlCommand();
-
-            cmd.Connection = conn;
-
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            cmd.CommandText = "PR_City_Insert";
-
-            cmd.Parameters.AddWithValue("@CityName", txtCityName.Text);
-
-            cmd.Parameters.AddWithValue("@Pincode", txtPincode.Text);
-
-            cmd.Parameters.AddWithValue("@STDCode", txtSTDCode.Text);
-
-            cmd.Parameters.AddWithValue("@StateID", ddlState.SelectedValue.ToString());
-
-            cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
-
-            cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
-
-            if (ddlCountry.SelectedItem.Value == "-1")
-            {
-                txtMsg.Text = "Please Select Country";
-                ddlCountry.Focus();
-                return;
-            }
-            if (ddlState.SelectedValue.ToString() == "-1")
-            {
-                txtMsg.Text = "Please Select State";
-                ddlState.Focus();
-                return;
-            }
-
-            cmd.ExecuteNonQuery();
-
-            conn.Close();
-
-            txtMsg.Text = "Data Inserted Successfully";
-            txtCityName.Text = "";
-            txtPincode.Text = "";
-            txtSTDCode.Text = "";
-        }
-        catch (SqlException exec)
-        {
-            if (exec.Number == 2627)
-            {
-                txtMsg.Text = "Cannot insert duplicate value";
-                txtCityName.Focus();
-            }
-        }
-    }
-
-    private void updateCity()
-    {
-        try
-        {
-
-            SqlConnection conn = new SqlConnection("data source=DHARMIK-PARMAR;initial catalog=AddressBook;Integrated Security=true;");
-
-            conn.Open();
-
-            SqlCommand cmd = new SqlCommand();
-
-            cmd.Connection = conn;
-
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            cmd.CommandText = "PR_City_UpdateByPK";
-
-            cmd.Parameters.AddWithValue("@CityID", Page.RouteData.Values["CityID"].ToString());
-
-            cmd.Parameters.AddWithValue("@CityName", txtCityName.Text);
-
-            cmd.Parameters.AddWithValue("@Pincode", txtPincode.Text);
-
-            cmd.Parameters.AddWithValue("@STDCode", txtSTDCode.Text);
-
-            cmd.Parameters.AddWithValue("@StateID", ddlState.SelectedValue.ToString());
-
-            //cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
-
-            if (ddlState.SelectedValue.ToString() == "-1")
-            {
-                txtMsg.Text = "Please Select State";
-                ddlState.Focus();
-                return;
-            }
-
-            cmd.ExecuteNonQuery();
-
-            conn.Close();
-
-            txtMsg.Text = "Data Updated Successfully";
-
-            Response.Redirect("~/AddressBook/AdminPanel/City/Display");
-        }
-        catch (SqlException exec)
-        {
-            if (exec.Number == 2627)
-            {
-                txtMsg.Text = "Cannot insert duplicate value";
-                txtCityName.Focus();
-            }
-        }
+        return val;
     }
 }

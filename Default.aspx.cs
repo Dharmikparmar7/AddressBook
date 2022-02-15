@@ -10,29 +10,27 @@ using System.Web.UI.WebControls;
 
 public partial class _Default : System.Web.UI.Page
 {
+    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         txtUserName.Focus();
     }
+    #endregion
 
+    #region Login
     protected void btnLogin_Click(object sender, EventArgs e)
     {
-
         SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         conn.Open();
 
-        SqlCommand cmd = new SqlCommand();
-        
-        cmd.Connection = conn;
+        SqlCommand cmd = new SqlCommand("PR_UserMaster_SelectByUserNamePassword", conn);
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.CommandText = "PR_UserMaster_SelectByUserNamePassword";
+        cmd.Parameters.AddWithValue("@UserName", DBNullOrStringValue(txtUserName.Text.Trim()));
 
-        cmd.Parameters.AddWithValue("@UserName", txtUserName.Text.Trim());
-
-        cmd.Parameters.AddWithValue("@Password", txtPassword.Text.Trim());
+        cmd.Parameters.AddWithValue("@Password", DBNullOrStringValue(txtPassword.Text.Trim()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -70,5 +68,15 @@ public partial class _Default : System.Web.UI.Page
             txtPassword.Text = "";
             txtUserName.Focus();
         }
+    }
+    #endregion
+
+    private Object DBNullOrStringValue(String val)
+    {
+        if (String.IsNullOrEmpty(val))
+        {
+            return DBNull.Value;
+        }
+        return val;
     }
 }
