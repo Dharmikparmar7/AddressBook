@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -76,6 +77,23 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
         }
         #endregion Server Side Validation
 
+        #region Local Variables
+        SqlString strCountryCode = SqlString.Null;
+        SqlString strCountryName = SqlString.Null;
+        #endregion Local Variables
+
+        #region Gather Information
+        if (txtCountryName.Text.Trim() != "")
+        {
+            strCountryName = txtCountryName.Text.Trim();
+        }
+        if (txtCountryCode.Text.Trim() != "")
+        {
+            strCountryCode = txtCountryCode.Text.Trim();
+        }
+        #endregion Gather Information
+
+
         try
         {
             SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
@@ -88,12 +106,11 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.Parameters.AddWithValue("@CountryName", DBNullOrStringValue(txtCountryName.Text));
+            cmd.Parameters.AddWithValue("@CountryName", strCountryName);
 
-            cmd.Parameters.AddWithValue("@CountryCode", DBNullOrStringValue(txtCountryCode.Text));
+            cmd.Parameters.AddWithValue("@CountryCode", strCountryCode);
 
             cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
-
 
             if (Page.RouteData.Values["CountryID"] != null)
             {
@@ -139,13 +156,4 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
         }
     }
     #endregion
-
-    private Object DBNullOrStringValue(String val)
-    {
-        if(String.IsNullOrEmpty(val))
-        {
-            return DBNull.Value;
-        }
-        return val;
-    }
 }

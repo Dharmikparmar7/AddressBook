@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -82,7 +83,8 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+        if (Session["UserID"] != null)
+            cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -109,7 +111,7 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
         {
             strErrorMessage += "Enter State Name";
         }
-        if (ddlCountry.SelectedItem.Text == "Select Country")
+        if (ddlCountry.SelectedIndex == 0)
         {
             strErrorMessage += "Select Country";
         }
@@ -119,6 +121,23 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
             return;
         }
         #endregion Server Side Validation
+
+        #region Local Variables
+        SqlString strStateName = SqlString.Null;
+        SqlInt32 strCountryID = SqlInt32.Null;
+        #endregion Local Variables
+
+        #region Gather Information
+        if (ddlCountry.SelectedIndex > 0)
+        {
+            strCountryID = Convert.ToInt32(ddlCountry.SelectedValue);
+        }
+        if (txtStateName.Text.Trim() != "")
+        {
+            strStateName = txtStateName.Text.Trim();
+        }
+        #endregion Gather Information
+
 
         try
         {
@@ -133,22 +152,15 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.Parameters.AddWithValue("@StateName", DBNullOrStringValue(txtStateName.Text.ToString().Trim()));
+            cmd.Parameters.AddWithValue("@StateName", strStateName);
 
-            cmd.Parameters.AddWithValue("@CountryID", DBNullOrStringValue(ddlCountry.SelectedValue.ToString().Trim()));
+            cmd.Parameters.AddWithValue("@CountryID", strCountryID);
 
             cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
 
-            if (ddlCountry.SelectedValue == "-1")
-            {
-                lblMsg.Text = "Please Select Country";
-                ddlCountry.Focus();
-                return;
-            }
-
             if (Page.RouteData.Values["StateID"] != null)
             {
-                cmd.Parameters.AddWithValue("@StateID", DBNullOrStringValue(Page.RouteData.Values["StateID"].ToString()));
+                cmd.Parameters.AddWithValue("@StateID", Page.RouteData.Values["StateID"].ToString());
 
                 cmd.CommandText = "PR_State_UpdateByPK";
 
@@ -162,7 +174,8 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
             }
             else
             {
-                cmd.Parameters.AddWithValue("UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+                if(Session["UserID"] != null)
+                    cmd.Parameters.AddWithValue("UserID", Session["UserID"].ToString());
 
                 cmd.CommandText = "PR_State_Insert";
 
@@ -174,9 +187,7 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
 
                 txtStateName.Text = "";
 
-                ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
-
-                ddlCountry.SelectedValue = "-1";
+                ddlCountry.SelectedIndex = 0;
             }
         }
         catch (SqlException exec)
@@ -193,16 +204,6 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
 
     protected void ddlCountry_SelectedIndexChanged(object sender, EventArgs e)
     {
-        ddlCountry.Items.Remove(new ListItem("Select Country", "-1"));
         lblMsg.Text = "";
-    }
-
-    private Object DBNullOrStringValue(String val)
-    {
-        if (String.IsNullOrEmpty(val))
-        {
-            return DBNull.Value;
-        }
-        return val;
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -25,6 +26,10 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
             fillCountry();
 
+            ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
+
+            ddlCountry.SelectedValue = "-1";
+
             if (Page.RouteData.Values["CityID"] != null)
             {
                 loadControlsByPK();
@@ -32,9 +37,7 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
             }
             else
             {
-                ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
-
-                ddlCountry.SelectedValue = "-1";
+                
 
                 ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
 
@@ -56,7 +59,7 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.AddWithValue("@CityID", DBNullOrStringValue(Page.RouteData.Values["CityID"].ToString()));
+        cmd.Parameters.AddWithValue("@CityID", Page.RouteData.Values["CityID"].ToString());
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -100,7 +103,8 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+        if (Session["UserID"] != null)
+            cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -129,9 +133,11 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.AddWithValue("@CountryID", DBNullOrStringValue(ddlCountry.SelectedValue.ToString()));
+        
+            cmd.Parameters.AddWithValue("@CountryID", (ddlCountry.SelectedValue.ToString()));
 
-        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+        if (Session["UserID"] != null)
+            cmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -150,14 +156,22 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
     #region Add and Edit
     protected void btnAddCity_Click(object sender, EventArgs e)
     {
+
+        #region Local Variables
+        SqlInt32 strStateID = SqlInt32.Null;
+        SqlString strCityName = SqlString.Null;
+        SqlString strPincode = SqlString.Null;
+        SqlString strSTDCode = SqlString.Null;
+        #endregion Local Variables
+
         #region Server Side Validation
         String strErrorMessage = "";
 
-        if(ddlCountry.SelectedItem.Text == "Select Country")
+        if (ddlCountry.SelectedIndex == 0)
         {
             strErrorMessage += "Select Country <br/>";
         }
-        if (ddlState.SelectedItem.Text == "Select State")
+        if (ddlState.SelectedIndex == 0)
         {
             strErrorMessage += "Select State<br/>";
         }
@@ -172,6 +186,25 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
         }
         #endregion Server Side Validation
 
+        #region Gather Information
+        if (ddlState.SelectedIndex > 0)
+        {
+            strStateID = Convert.ToInt32(ddlState.SelectedValue);
+        }
+        if (txtCityName.Text.Trim() != "")
+        {
+            strCityName = txtCityName.Text.Trim();
+        }
+        if (txtPincode.Text.Trim() != "")
+        {
+            strPincode = txtPincode.Text.Trim();
+        }
+        if (txtSTDCode.Text.Trim() != "")
+        {
+            strSTDCode = txtSTDCode.Text.Trim();
+        }
+        #endregion Gather Information
+
         try
         {
 
@@ -185,17 +218,17 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.Parameters.AddWithValue("@CityName", DBNullOrStringValue(txtCityName.Text));
+            cmd.Parameters.AddWithValue("@CityName", strCityName);
 
-            cmd.Parameters.AddWithValue("@Pincode", DBNullOrStringValue(txtPincode.Text));
+            cmd.Parameters.AddWithValue("@Pincode", strPincode);
 
-            cmd.Parameters.AddWithValue("@STDCode", DBNullOrStringValue(txtSTDCode.Text));
+            cmd.Parameters.AddWithValue("@STDCode", strSTDCode);
 
-            cmd.Parameters.AddWithValue("@StateID", DBNullOrStringValue(ddlState.SelectedValue.ToString()));
+            cmd.Parameters.AddWithValue("@StateID", strStateID);
 
             if (Page.RouteData.Values["CityID"] != null)
             {
-                cmd.Parameters.AddWithValue("@CityID", DBNullOrStringValue(Page.RouteData.Values["CityID"].ToString()));
+                cmd.Parameters.AddWithValue("@CityID", (Page.RouteData.Values["CityID"].ToString()));
 
                 cmd.CommandText = "PR_City_UpdateByPK";
 
@@ -207,7 +240,8 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
             }
             else
             {
-                cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+                if (Session["UserID"] != null)
+                    cmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
 
                 cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
 
@@ -220,10 +254,8 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
                 txtPincode.Text = "";
                 txtSTDCode.Text = "";
 
-                ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
-
-                ddlCountry.SelectedValue = "-1";
-
+                ddlCountry.SelectedIndex = 0;
+                ddlState.Items.Clear();
                 ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
 
                 ddlState.SelectedValue = "-1";
@@ -249,8 +281,6 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
     
     protected void ddlCountry_SelectedIndexChanged(object sender, EventArgs e)
     {
-        ddlCountry.Items.Remove(new ListItem("Select Country", "-1"));
-
         fillState();
 
         ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
@@ -262,16 +292,6 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
     
     protected void ddlState_SelectedIndexChanged(object sender, EventArgs e)
     {
-        ddlState.Items.Remove(new ListItem("Select State", "-1"));
         txtMsg.Text = "";
-    }
-
-    private Object DBNullOrStringValue(String val)
-    {
-        if (String.IsNullOrEmpty(val))
-        {
-            return DBNull.Value;
-        }
-        return val;
     }
 }

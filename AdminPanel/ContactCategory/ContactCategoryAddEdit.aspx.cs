@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -34,7 +35,7 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
 
                 cmd.CommandType = CommandType.StoredProcedure;
 
-                cmd.Parameters.AddWithValue("@ContactCategoryID", DBNullOrStringValue(Page.RouteData.Values["ContactCategoryID"].ToString()));
+                cmd.Parameters.AddWithValue("@ContactCategoryID", (Page.RouteData.Values["ContactCategoryID"].ToString()));
 
                 SqlDataReader read = cmd.ExecuteReader();
 
@@ -45,7 +46,7 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
                         if (!read["ContactCategoryName"].Equals(DBNull.Value))
                             txtCCName.Text = read["ContactCategoryName"].ToString();
 
-                        
+                        break;
                     }
                 }
 
@@ -72,6 +73,19 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
             return;
         }
 
+        #region Local Variables
+        SqlString strContactCategoryName = SqlString.Null;
+        SqlConnection objConnection = new SqlConnection();
+        objConnection.ConnectionString = ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString;
+        #endregion Local Variables
+
+        #region Gather Information
+        if (txtCCName.Text.Trim() != "")
+        {
+            strContactCategoryName = txtCCName.Text.Trim();
+        }
+        #endregion Gather Information
+
         #endregion Server Side Validation
         try
         {
@@ -85,13 +99,13 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.Parameters.AddWithValue("@ContactCategoryName", DBNullOrStringValue(txtCCName.Text));
+            cmd.Parameters.AddWithValue("@ContactCategoryName", strContactCategoryName);
 
             cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
 
             if (Page.RouteData.Values["ContactCategoryID"] != null)
             {
-                cmd.Parameters.AddWithValue("@ContactCategoryId", DBNullOrStringValue(Page.RouteData.Values["ContactCategoryID"].ToString()));
+                cmd.Parameters.AddWithValue("@ContactCategoryId", (Page.RouteData.Values["ContactCategoryID"].ToString()));
 
                 cmd.CommandText = "PR_ContactCategory_UpdateByPK";
 
@@ -105,7 +119,8 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
             }
             else
             {
-                cmd.Parameters.AddWithValue("UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+                if (Session["UserID"] != null)
+                    cmd.Parameters.AddWithValue("UserID", (Session["UserID"].ToString()));
 
                 cmd.CommandText = "PR_ContactCategory_Insert";
 
@@ -128,13 +143,4 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
 
     }
     #endregion
-
-    private Object DBNullOrStringValue(String val)
-    {
-        if (String.IsNullOrEmpty(val))
-        {
-            return DBNull.Value;
-        }
-        return val;
-    }
 }

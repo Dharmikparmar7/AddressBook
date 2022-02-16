@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -26,6 +27,9 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
             fillCountry();
 
+            ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
+            ddlCountry.SelectedValue = "-1";
+
             if (Page.RouteData.Values["ContactID"] != null)
             {
                 loadControls();
@@ -33,11 +37,7 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
             }
             else
             {
-                ddlContactCategory.Items.Insert(0, new ListItem("Select Contact Category", "-1"));
-                ddlContactCategory.SelectedValue = "-1";
 
-                ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
-                ddlCountry.SelectedValue = "-1";
 
                 ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
                 ddlState.SelectedValue = "-1";
@@ -62,7 +62,7 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+        cmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -73,6 +73,9 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
         ddlContactCategory.DataValueField = "ContactCategoryID";
 
         ddlContactCategory.DataBind();
+
+        ddlContactCategory.Items.Insert(0, new ListItem("Select Contact Category", "-1"));
+        ddlContactCategory.SelectedValue = "-1";
 
         conn.Close();
     }
@@ -90,7 +93,7 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+        cmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -118,9 +121,9 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
         cmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.Parameters.AddWithValue("@CountryID", DBNullOrStringValue(CountryID));
+        cmd.Parameters.AddWithValue("@CountryID", (CountryID));
 
-        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
+        cmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
 
         SqlDataReader read = cmd.ExecuteReader();
 
@@ -204,6 +207,59 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
         }
         #endregion Server Side Validation
 
+        #region Local Variables
+        SqlString strContactName = SqlString.Null;
+        SqlString strAddress = SqlString.Null;
+        SqlInt32 strContactCategoryID = SqlInt32.Null;
+        SqlInt32 strCityID = SqlInt32.Null;
+        SqlInt32 strStateID = SqlInt32.Null;
+        SqlInt32 strCountryID = SqlInt32.Null;
+        SqlString strMobileNumber = SqlString.Null;
+        SqlString strEmailAddress = SqlString.Null;
+        SqlString strPincode = SqlString.Null;
+        SqlString strFaceBookID = SqlString.Null;
+        SqlString strLinkedinID = SqlString.Null;
+        #endregion Local Variables
+
+        #region Gather Information
+        if (ddlContactCategory.SelectedIndex > 0)
+        {
+            strContactCategoryID = Convert.ToInt32(ddlContactCategory.SelectedValue);
+        }
+        if (ddlCity.SelectedIndex > 0)
+        {
+            strCityID = Convert.ToInt32(ddlCity.SelectedValue);
+        }
+        if (ddlState.SelectedIndex > 0)
+        {
+            strStateID = Convert.ToInt32(ddlState.SelectedValue);
+        }
+        if (ddlCountry.SelectedIndex > 0)
+        {
+            strCountryID = Convert.ToInt32(ddlCountry.SelectedValue);
+        }
+        if (txtContactName.Text.Trim() != "")
+        {
+            strContactName = txtContactName.Text.Trim();
+        }
+        if (txtMobile.Text.Trim() != "")
+        {
+            strMobileNumber = txtMobile.Text.Trim();
+        }
+        if (txtAddress.Text.Trim() != "")
+        {
+            strAddress = txtAddress.Text.Trim();
+        }
+        if (txtEmail.Text.Trim() != "")
+        {
+            strEmailAddress = txtEmail.Text.Trim();
+        }
+        if (txtPincode.Text.Trim() != "")
+        {
+            strPincode = txtPincode.Text.Trim();
+        }
+        #endregion
+
         try
         {
             SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
@@ -216,58 +272,29 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
             cmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.Parameters.AddWithValue("@ContactName", DBNullOrStringValue(txtContactName.Text.ToString().Trim()));
+            cmd.Parameters.AddWithValue("@ContactName", strContactName);
 
-            cmd.Parameters.AddWithValue("@ContactCategoryID", DBNullOrStringValue(ddlContactCategory.SelectedValue.ToString()));
+            cmd.Parameters.AddWithValue("@ContactCategoryID", strContactCategoryID);
 
-            cmd.Parameters.AddWithValue("@Address", DBNullOrStringValue(txtAddress.Text));
+            cmd.Parameters.AddWithValue("@Address", strAddress);
 
-            cmd.Parameters.AddWithValue("@Pincode", DBNullOrStringValue(txtPincode.Text));
+            cmd.Parameters.AddWithValue("@Pincode", strPincode);
 
-            cmd.Parameters.AddWithValue("@CityID", DBNullOrStringValue(ddlCity.SelectedValue));
+            cmd.Parameters.AddWithValue("@CityID", strCityID);
 
-            cmd.Parameters.AddWithValue("@StateID", DBNullOrStringValue(ddlState.SelectedValue));
+            cmd.Parameters.AddWithValue("@StateID", strStateID);
 
-            cmd.Parameters.AddWithValue("@CountryID", DBNullOrStringValue(ddlCountry.SelectedValue));
+            cmd.Parameters.AddWithValue("@CountryID", strCountryID);
 
-            cmd.Parameters.AddWithValue("@EmailAddress", DBNullOrStringValue(txtEmail.Text));
+            cmd.Parameters.AddWithValue("@EmailAddress", strEmailAddress);
 
-            cmd.Parameters.AddWithValue("@MobileNo", DBNullOrStringValue(txtMobile.Text));
+            cmd.Parameters.AddWithValue("@MobileNo", strMobileNumber);
 
             cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
 
-
-            if (ddlContactCategory.SelectedValue == "-1")
-            {
-                lbl.Text = "Please Select Contact Category";
-                ddlContactCategory.Focus();
-                return;
-            }
-
-            if (ddlCountry.SelectedValue == "-1")
-            {
-                lbl.Text = "Please Select Country";
-                ddlCountry.Focus();
-                return;
-            }
-
-            if (ddlState.SelectedValue == "-1")
-            {
-                lbl.Text = "Please Select State";
-                ddlState.Focus();
-                return;
-            }
-
-            if (ddlCity.SelectedValue == "-1")
-            {
-                lbl.Text = "Please Select City";
-                ddlCity.Focus();
-                return;
-            }
-
             if (Page.RouteData.Values["ContactID"] != null)
             {
-                cmd.Parameters.AddWithValue("@ContactID", DBNullOrStringValue(Page.RouteData.Values["ContactID"].ToString()));
+                cmd.Parameters.AddWithValue("@ContactID", (Page.RouteData.Values["ContactID"].ToString()));
 
                 cmd.CommandText = "PR_Contact_UpdateByPK";
 
@@ -295,11 +322,9 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
                 txtMobile.Text = "";
                 txtPincode.Text = "";
 
-                ddlContactCategory.Items.Insert(0, new ListItem("Select Contact Category", "-1"));
-                ddlContactCategory.SelectedValue = "-1";
+                ddlContactCategory.SelectedIndex = 0;
 
-                ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
-                ddlCountry.SelectedValue = "-1";
+                ddlCountry.SelectedIndex = 0;
 
                 ddlState.Items.Clear();
 
@@ -312,7 +337,7 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
                 ddlCity.SelectedValue = "-1";
             }
         }
-        catch(SqlException exec)
+        catch (SqlException exec)
         {
             lbl.Text = exec.Message.ToString();
         }
@@ -324,6 +349,7 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
     #region LoadControl
     private void loadControls()
     {
+
         SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         conn.Open();
@@ -345,7 +371,7 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
                 if (!read["ContactCategoryID"].Equals(DBNull.Value))
                     ddlContactCategory.SelectedValue = read["ContactCategoryID"].ToString();
-                
+
                 if (!read["Address"].Equals(DBNull.Value))
                     txtAddress.Text = read["Address"].ToString();
 
@@ -380,7 +406,18 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
     protected void ddlCountry_TextChanged(object sender, EventArgs e)
     {
-        ddlCountry.Items.Remove(new ListItem("Select Country", "-1"));
+        if (ddlCountry.SelectedIndex == 0)
+        {
+            ddlState.Items.Clear();
+            ddlCity.Items.Clear();
+
+            ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
+            ddlState.SelectedValue = "-1";
+
+            ddlCity.Items.Insert(0, new ListItem("Select City", "-1"));
+            ddlCity.SelectedValue = "-1";
+            return;
+        }
 
         fillState(ddlCountry.SelectedValue.ToString());
         ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
@@ -392,29 +429,23 @@ public partial class AdminPanel_Contact_ContactAddEdit : System.Web.UI.Page
 
         lbl.Text = "";
     }
-    
+
     protected void ddlState_TextChanged(object sender, EventArgs e)
     {
-        ddlState.Items.Remove(new ListItem("Select State", "-1"));
-
         fillCity(ddlState.SelectedValue.ToString());
         ddlCity.Items.Insert(0, new ListItem("Select City", "-1"));
         ddlCity.SelectedValue = "-1";
 
         lbl.Text = "";
     }
-    
+
     protected void ddlContactCategory_SelectedIndexChanged(object sender, EventArgs e)
     {
-        ddlContactCategory.Items.Remove(new ListItem("Select Contact Category", "-1"));
-
         lbl.Text = "";
     }
-    
+
     protected void ddlCity_SelectedIndexChanged(object sender, EventArgs e)
     {
-        ddlCity.Items.Remove(new ListItem("Select City", "-1"));
-
         lbl.Text = "";
     }
 
