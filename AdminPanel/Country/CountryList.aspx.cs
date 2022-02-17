@@ -10,75 +10,84 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_Country_CountryList : System.Web.UI.Page
 {
-    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["UserID"] == null)
-        {
-            Response.Redirect("~/AddressBook/AdminPanel/Login");
-        }
         if (!IsPostBack)
         {
-            fillCountry();
+            if(Session["UserID"] != null)
+                FillCountryGridView();
         }
     }
-    #endregion
 
-
-    #region Delete
+    #region Delete Country
     protected void gvCountry_RowCommand(object sender, GridViewCommandEventArgs e)
     {
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+
         try
         {
-            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+            if(objConn.State != ConnectionState.Open)
+                objConn.Open();
+            
+            SqlCommand objCmd = new SqlCommand("PR_Country_DeleteByPK", objConn);
 
-            conn.Open();
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-            SqlCommand cmd = new SqlCommand("PR_Country_DeleteByPK", conn);
+            objCmd.Parameters.AddWithValue("@CountryID", e.CommandArgument.ToString());
 
-            cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.ExecuteNonQuery();
 
-            cmd.Parameters.AddWithValue("@CountryID", e.CommandArgument.ToString());
-
-            cmd.ExecuteScalar();
-
-            conn.Close();
         }
         catch (SqlException exec)
         {
-            if(exec.Number == 547)
-            {
-                lbl.Text = "Could not delete the record as it is used as foregin key";
-            }
+            if (exec.Number == 547)
+                lblMessage.Text = "Could not delete the record as it is used as foregin key";
+
+            else
+                lblMessage.Text = exec.Message;
         }
         finally
         {
-            fillCountry();
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
+
+            FillCountryGridView();
         }
     }
     #endregion
 
 
-    #region FillCountry
-    private void fillCountry()
+    #region Fill Country Gridview
+    private void FillCountryGridView()
     {
-        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+        
+        try
+        {
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
 
-        conn.Open();
+            SqlCommand objCmd = new SqlCommand("PR_Country_SelectAllByUserID", objConn);
 
-        SqlCommand cmd = new SqlCommand("PR_Country_SelectAllByUserID", conn);
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-        cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
 
-        cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+            SqlDataReader objSDR = objCmd.ExecuteReader();
 
-        SqlDataReader read = cmd.ExecuteReader();
+            gvCountry.DataSource = objSDR;
 
-        gvCountry.DataSource = read;
-
-        gvCountry.DataBind();
-
-        conn.Close();
+            gvCountry.DataBind();
+        }
+        catch (Exception ex)
+        {
+            lblMessage.Text = ex.Message;
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
+        }
     }
     #endregion
 }

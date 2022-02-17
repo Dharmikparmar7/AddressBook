@@ -68,7 +68,7 @@
                 </div>
 
                 <div class="navbar-text me-3 font-monospace">
-                    <asp:Label runat="server" ID="lbl"></asp:Label>
+                    <asp:Label runat="server" ID="lblMessage"></asp:Label>
                     <asp:Image runat="server" ID="imgProfile" Width="45px" CssClass="irounded-circle z-depth-0" />
                 </div>
 

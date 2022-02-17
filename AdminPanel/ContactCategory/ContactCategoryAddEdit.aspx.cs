@@ -11,48 +11,57 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.Web.UI.Page
 {
-    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["UserID"] == null)
-        {
-            Response.Redirect("~/AddressBook/AdminPanel/Login");
-        }
         if (!IsPostBack)
         {
             txtCCName.Focus();
 
-            #region LoadControl
             if (Page.RouteData.Values["ContactCategoryID"] != null)
             {
                 btnAdd.Text = "Save";
-
-                SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
-
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand("PR_ContactCategory_SelectByPK", conn);
-
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.Parameters.AddWithValue("@ContactCategoryID", (Page.RouteData.Values["ContactCategoryID"].ToString()));
-
-                SqlDataReader read = cmd.ExecuteReader();
-
-                if (read.HasRows)
-                {
-                    while (read.Read())
-                    {
-                        if (!read["ContactCategoryName"].Equals(DBNull.Value))
-                            txtCCName.Text = read["ContactCategoryName"].ToString();
-
-                        break;
-                    }
-                }
-
-                conn.Close();
+                LoadControls();
             }
-            #endregion
+        }
+    }
+
+    #region Load Controls
+    protected void LoadControls()
+    {
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+
+        try
+        {
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
+
+            SqlCommand objCmd = new SqlCommand("PR_ContactCategory_SelectByPK", objConn);
+
+            objCmd.CommandType = CommandType.StoredProcedure;
+
+            objCmd.Parameters.AddWithValue("@ContactCategoryID", (Page.RouteData.Values["ContactCategoryID"].ToString()));
+
+            SqlDataReader objSDR = objCmd.ExecuteReader();
+
+            if (objSDR.HasRows)
+            {
+                while (objSDR.Read())
+                {
+                    if (!objSDR["ContactCategoryName"].Equals(DBNull.Value))
+                        txtCCName.Text = objSDR["ContactCategoryName"].ToString();
+
+                    break;
+                }
+            }
+        }
+        catch (SqlException ex)
+        {
+            lblMessage.Text = ex.Message;
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
         }
     }
     #endregion
@@ -63,13 +72,13 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
         #region Server Side Validation
         String strErrorMessage = "";
 
-        if(txtCCName.Text.Trim() == "")
+        if (txtCCName.Text.Trim() == "")
         {
             strErrorMessage = "Enter Contact Category Name<br/>";
         }
         if (strErrorMessage.Trim() != "")
         {
-            txtMsg.Text = strErrorMessage;
+            lblMessage.Text = strErrorMessage;
             return;
         }
 
@@ -87,48 +96,46 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
         #endregion Gather Information
 
         #endregion Server Side Validation
+
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+
         try
         {
-            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
 
-            conn.Open();
+            SqlCommand objCmd = new SqlCommand();
 
-            SqlCommand cmd = new SqlCommand();
+            objCmd.Connection = objConn;
 
-            cmd.Connection = conn;
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.Parameters.AddWithValue("@ContactCategoryName", strContactCategoryName);
 
-            cmd.Parameters.AddWithValue("@ContactCategoryName", strContactCategoryName);
-
-            cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
+            objCmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
 
             if (Page.RouteData.Values["ContactCategoryID"] != null)
             {
-                cmd.Parameters.AddWithValue("@ContactCategoryId", (Page.RouteData.Values["ContactCategoryID"].ToString()));
+                objCmd.Parameters.AddWithValue("@ContactCategoryId", Page.RouteData.Values["ContactCategoryID"].ToString());
 
-                cmd.CommandText = "PR_ContactCategory_UpdateByPK";
+                objCmd.CommandText = "PR_ContactCategory_UpdateByPK";
 
-                cmd.ExecuteNonQuery();
-
-                conn.Close();
-
-                txtMsg.Text = "Data Updated Successfully";
+                objCmd.ExecuteNonQuery();
 
                 Response.Redirect("~/AddressBook/AdminPanel/ContactCategory/Display");
             }
             else
             {
                 if (Session["UserID"] != null)
-                    cmd.Parameters.AddWithValue("UserID", (Session["UserID"].ToString()));
+                    objCmd.Parameters.AddWithValue("UserID", (Session["UserID"].ToString()));
 
-                cmd.CommandText = "PR_ContactCategory_Insert";
+                objCmd.CommandText = "PR_ContactCategory_Insert";
 
-                cmd.ExecuteNonQuery();
+                objCmd.ExecuteNonQuery();
 
-                conn.Close();
+                objConn.Close();
 
-                txtMsg.Text = "Data Inserted Successfully";
+                lblMessage.Text = "Data Inserted Successfully";
 
                 txtCCName.Text = "";
             }
@@ -136,11 +143,16 @@ public partial class AdminPanel_ContactCategory_ContactCategoryAddEdit : System.
         catch (SqlException exec)
         {
             if (exec.Number == 2627)
-            {
-                txtMsg.Text = "Cannot insert duplicate value";
-            }
-        }
+                lblMessage.Text = "Cannot insert duplicate value";
+            else
+                lblMessage.Text = exec.Message;
 
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
+        }
     }
     #endregion
 }

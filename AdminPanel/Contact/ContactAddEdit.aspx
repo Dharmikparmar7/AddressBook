@@ -80,12 +80,16 @@
 
                         <div class="row">
                             Select State :
-                            <asp:DropDownList runat="server" ID="ddlState" OnTextChanged="ddlState_TextChanged" AutoPostBack="true" CssClass="form-control"></asp:DropDownList>
+                            <asp:DropDownList runat="server" ID="ddlState" OnTextChanged="ddlState_TextChanged" AutoPostBack="true" CssClass="form-control">
+                                <asp:ListItem Value="-1">Select State</asp:ListItem>
+                            </asp:DropDownList>
                         </div>
 
                         <div class="row">
                             Select City :
-                            <asp:DropDownList runat="server" ID="ddlCity" CssClass="form-control" OnSelectedIndexChanged="ddlCity_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList>
+                            <asp:DropDownList runat="server" ID="ddlCity" CssClass="form-control" OnSelectedIndexChanged="ddlCity_SelectedIndexChanged" AutoPostBack="true">
+                                <asp:ListItem Value="-1">Select City</asp:ListItem>
+                            </asp:DropDownList>
                         </div>
 
                         <div class="row">
@@ -96,7 +100,7 @@
                         </div>
 
                         <div class="row mt-3">
-                            <asp:Label runat="server" ID="lbl"></asp:Label>
+                            <asp:Label runat="server" ID="lblMessage"></asp:Label>
                         </div>
                     </div>
 

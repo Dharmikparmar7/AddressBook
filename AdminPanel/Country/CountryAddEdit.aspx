@@ -50,7 +50,7 @@
                     </div>
 
                     <div class="row mt-3">
-                        <asp:Label runat="server" ID="lblMsg"></asp:Label>
+                        <asp:Label runat="server" ID="lblMessage"></asp:Label>
                     </div>
                 </div>
             </div>

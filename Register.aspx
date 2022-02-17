@@ -90,7 +90,7 @@
                                     </div>
 
                                     <div class="d-flex justify-content-center m-3">
-                                        <asp:Label runat="server" ID="lblMsg" ForeColor="Red"></asp:Label>
+                                        <asp:Label runat="server" ID="lblMessage" ForeColor="Red"></asp:Label>
                                     </div>
 
                                     <p class="text-center text-muted mt-5 mb-0">

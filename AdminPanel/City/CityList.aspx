@@ -27,7 +27,7 @@
                 <asp:HyperLink runat="server" NavigateUrl="~/AddressBook/AdminPanel/City/Add" CssClass="btn btn-dark">Add City</asp:HyperLink>
             </div>
             <div>
-                <asp:Label runat="server" ID="lbl"></asp:Label>
+                <asp:Label runat="server" ID="lblMessage"></asp:Label>
             </div>
         </div>
     </div>

@@ -13,79 +13,81 @@ public partial class AdminPanel_State_StateList : System.Web.UI.Page
     #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["UserID"] == null)
-        {
-            Response.Redirect("~/AddressBook/AdminPanel/Login");
-        }
         if (!IsPostBack)
         {
-            fillState();
+            FillStateGridView();
         }
     }
     #endregion
 
-    #region Delete
+    #region Delete State
     protected void gvState_RowCommand(object sender, GridViewCommandEventArgs e)
     {
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
         try
         {
-            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
 
-            conn.Open();
+            SqlCommand objCmd = new SqlCommand("PR_State_DeleteByPK", objConn);
 
-            SqlCommand cmd = new SqlCommand("PR_State_DeleteByPK", conn);
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.Parameters.AddWithValue("@StateID", e.CommandArgument.ToString());
 
-            cmd.Parameters.AddWithValue("@StateID", DBNullOrStringValue(e.CommandArgument.ToString()));
+            objCmd.ExecuteNonQuery();
 
-            cmd.ExecuteScalar();
-
-            conn.Close();
         }
         catch (SqlException exec)
         {
             if (exec.Number == 547)
-            {
-                lbl.Text = "Could not delete the record as it is used as foregin key";
-            }
+                lblMessage.Text = "Could not delete the record as it is used as foregin key";
+            else
+                lblMessage.Text = exec.Message;
         }
         finally
         {
-            fillState();
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
+
+            FillStateGridView();
         }
     }
     #endregion
 
-    #region FillStateGridView
-    private void fillState()
+    #region Fill State GridView
+    private void FillStateGridView()
     {
-        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
-        conn.Open();
-
-        SqlCommand cmd = new SqlCommand("PR_State_SelectAllByUserID", conn);
-
-        cmd.CommandType = CommandType.StoredProcedure;
-
-        cmd.Parameters.AddWithValue("@UserID", DBNullOrStringValue(Session["UserID"].ToString()));
-
-        SqlDataReader read = cmd.ExecuteReader();
-
-        gvState.DataSource = read;
-
-        gvState.DataBind();
-
-        conn.Close();
-    }
-    #endregion
-
-    private Object DBNullOrStringValue(String val)
-    {
-        if (String.IsNullOrEmpty(val))
+        try
         {
-            return DBNull.Value;
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
+
+            SqlCommand objCmd = new SqlCommand("PR_State_SelectAllByUserID", objConn);
+
+            objCmd.CommandType = CommandType.StoredProcedure;
+
+            if(Session["UserID"] != null)
+                objCmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+
+            SqlDataReader objSDR = objCmd.ExecuteReader();
+
+            gvState.DataSource = objSDR;
+
+            gvState.DataBind();
+
         }
-        return val;
+        catch(SqlException ex)
+        {
+            lblMessage.Text = ex.Message;
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
+        }
     }
+    #endregion
 }

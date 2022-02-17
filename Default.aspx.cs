@@ -10,73 +10,74 @@ using System.Web.UI.WebControls;
 
 public partial class _Default : System.Web.UI.Page
 {
-    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         txtUserName.Focus();
     }
-    #endregion
 
     #region Login
     protected void btnLogin_Click(object sender, EventArgs e)
     {
-        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
-        conn.Open();
-
-        SqlCommand cmd = new SqlCommand("PR_UserMaster_SelectByUserNamePassword", conn);
-
-        cmd.CommandType = CommandType.StoredProcedure;
-
-        cmd.Parameters.AddWithValue("@UserName", DBNullOrStringValue(txtUserName.Text.Trim()));
-
-        cmd.Parameters.AddWithValue("@Password", DBNullOrStringValue(txtPassword.Text.Trim()));
-
-        SqlDataReader read = cmd.ExecuteReader();
-
-        DataTable dtUser = new DataTable();
-
-        dtUser.Load(read);
-
-        conn.Close();
-
-        if (dtUser != null && dtUser.Rows.Count > 0)
+        try
         {
-            foreach (DataRow drUser in dtUser.Rows)
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
+
+            SqlCommand objCmd = new SqlCommand("PR_UserMaster_SelectByUserNamePassword", objConn);
+
+            objCmd.CommandType = CommandType.StoredProcedure;
+
+            objCmd.Parameters.AddWithValue("@UserName", txtUserName.Text.Trim());
+
+            objCmd.Parameters.AddWithValue("@Password", txtPassword.Text.Trim());
+
+            SqlDataReader objSDR = objCmd.ExecuteReader();
+
+            DataTable dtUser = new DataTable();
+
+            dtUser.Load(objSDR);
+
+            if (dtUser != null && dtUser.Rows.Count > 0)
             {
-                if (!drUser["UserID"].Equals(DBNull.Value))
+                foreach (DataRow drUser in dtUser.Rows)
                 {
-                    Session["UserID"] = drUser["UserID"].ToString();
-                }
-                if (!drUser["FullName"].Equals(DBNull.Value))
-                {
-                    Session["FullName"] = drUser["FullName"].ToString();
-                }
-                if (!drUser["PhotoPath"].Equals(DBNull.Value))
-                {
-                    Session["ImgProfile"] = drUser["PhotoPath"].ToString();
-                }
+                    if (!drUser["UserID"].Equals(DBNull.Value))
+                    {
+                        Session["UserID"] = drUser["UserID"].ToString();
+                    }
+                    if (!drUser["FullName"].Equals(DBNull.Value))
+                    {
+                        Session["FullName"] = drUser["FullName"].ToString();
+                    }
+                    if (!drUser["PhotoPath"].Equals(DBNull.Value))
+                    {
+                        Session["ImgProfile"] = drUser["PhotoPath"].ToString();
+                    }
 
-                break;
+                    break;
+                }
+                Response.Redirect("~/AddressBook/AdminPanel/Contact/Display");
             }
-            Response.Redirect("~/AddressBook/AdminPanel/Contact/Display");
+            else
+            {
+                lblMessage.Text = "Username or Password is not valid";
+                txtUserName.Text = "";
+                txtPassword.Text = "";
+                txtUserName.Focus();
+            }
         }
-        else
+        catch(SqlException ex)
         {
-            lblMsg.Text = "Username or Password is not valid";
-            txtUserName.Text = "";
-            txtPassword.Text = "";
-            txtUserName.Focus();
+            lblMessage.Text = ex.Message;
         }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
+        }
+
     }
     #endregion
-
-    private Object DBNullOrStringValue(String val)
-    {
-        if (String.IsNullOrEmpty(val))
-        {
-            return DBNull.Value;
-        }
-        return val;
-    }
 }

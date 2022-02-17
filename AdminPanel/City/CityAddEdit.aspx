@@ -40,7 +40,9 @@
                 </div>
                 <div class="row">
                     Select State :
-                    <asp:DropDownList runat="server" ID="ddlState" AutoPostBack="true" CssClass="form-select mt-2 mb-4" OnSelectedIndexChanged="ddlState_SelectedIndexChanged"></asp:DropDownList>
+                    <asp:DropDownList runat="server" ID="ddlState" AutoPostBack="true" CssClass="form-select mt-2 mb-4" OnSelectedIndexChanged="ddlState_SelectedIndexChanged">
+                        <asp:ListItem Value="-1">Select State</asp:ListItem>
+                    </asp:DropDownList>
                 </div>
 
                 <div class="row ">
@@ -50,7 +52,7 @@
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <asp:Label runat="server" ID="txtMsg" CssClass="float-right"></asp:Label>
+                    <asp:Label runat="server" ID="lblMessage" CssClass="float-right"></asp:Label>
                 </div>
             </div>
         </div>

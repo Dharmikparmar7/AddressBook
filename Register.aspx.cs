@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -18,53 +19,81 @@ public partial class Register : System.Web.UI.Page
     #region Register
     protected void btnRegister_Click(object sender, EventArgs e)
     {
+        SqlString strFullName = SqlString.Null;
+        SqlString strUserName = SqlString.Null;
+        SqlString strPassword = SqlString.Null;
+        SqlString strAddress = SqlString.Null;
+        SqlString strMobileNo = SqlString.Null;
+        SqlString strEmail = SqlString.Null;
+        SqlString strPhotoPath = SqlString.Null;
+
+        if (txtFullName.Text.Trim() != "")
+            strFullName = txtFullName.Text;
+
+        if (txtUserName.Text.Trim() != "")
+            strUserName = txtUserName.Text;
+
+        if (txtPassword.Text.Trim() != "")
+            strPassword = txtPassword.Text;
+
+        if (txtAddress.Text.Trim() != "")
+            strAddress = txtAddress.Text;
+
+        if (txtMobileNo.Text.Trim() != "")
+            strMobileNo = txtMobileNo.Text;
+
+        if (txtEmail.Text.Trim() != "")
+            strEmail = txtEmail.Text;
+
+        if(fuImage.HasFile)
+            strPhotoPath = "~/Content/Image/" + fuImage.FileName;
+
+
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
         try
         {
-            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
 
-            conn.Open();
+            SqlCommand objCmd = new SqlCommand("PR_UserMaster_RegisterUser", objConn);
 
-            SqlCommand cmd = new SqlCommand("PR_UserMaster_RegisterUser", conn);
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.Parameters.AddWithValue("@FullName", strFullName);
 
-            cmd.Parameters.AddWithValue("@FullName", DBNullOrStringValue(txtFullName.Text));
+            objCmd.Parameters.AddWithValue("@UserName", strUserName);
 
-            cmd.Parameters.AddWithValue("@UserName", DBNullOrStringValue(txtUserName.Text));
+            objCmd.Parameters.AddWithValue("@Password", strPassword);
 
-            cmd.Parameters.AddWithValue("@Password", DBNullOrStringValue(txtPassword.Text));
+            objCmd.Parameters.AddWithValue("@Address", strAddress);
 
-            cmd.Parameters.AddWithValue("@Address", DBNullOrStringValue(txtAddress.Text));
+            objCmd.Parameters.AddWithValue("@MobileNo", strMobileNo);
 
-            cmd.Parameters.AddWithValue("@MobileNo", DBNullOrStringValue(txtMobileNo.Text));
+            objCmd.Parameters.AddWithValue("@Email", strMobileNo);
 
-            cmd.Parameters.AddWithValue("@Email", DBNullOrStringValue(txtEmail.Text));
+            objCmd.Parameters.AddWithValue("@PhotoPath", strPhotoPath);
 
-            cmd.Parameters.AddWithValue("@PhotoPath", "~/Content/Image/" + fuImage.FileName);
+            objCmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
 
-            cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
+            objCmd.ExecuteNonQuery();
 
-            SqlDataReader read = cmd.ExecuteReader();
-
-            fuImage.SaveAs(Server.MapPath("~/Content/Image/" + fuImage.FileName));
+            fuImage.SaveAs(Server.MapPath(strPhotoPath.ToString()));
 
             Response.Redirect("~/AddressBook/AdminPanel/Login");
         }
 
         catch (SqlException ex)
         {
-            if(ex.Number == 2601)
-                lblMsg.Text = "This Username is already exist";
+            if (ex.Number == 2601)
+                lblMessage.Text = "This Username is already exist";
+
+            lblMessage.Text = ex.Message;
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
         }
     }
     #endregion
-
-    private Object DBNullOrStringValue(String val)
-    {
-        if (String.IsNullOrEmpty(val))
-        {
-            return DBNull.Value;
-        }
-        return val;
-    }
 }

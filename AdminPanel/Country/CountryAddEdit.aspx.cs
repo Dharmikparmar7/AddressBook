@@ -11,14 +11,8 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
 {
-    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["UserID"] == null)
-        {
-            Response.Redirect("~/AddressBook/AdminPanel/Login");
-        }
-
         if (!IsPostBack)
         {
             txtCountryName.Focus();
@@ -26,35 +20,52 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
             if (Page.RouteData.Values["CountryID"] != null)
             {
                 btnAdd.Text = "Save";
-
-                SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
-
-                conn.Open();
-
-                SqlCommand cmd = new SqlCommand("PR_Country_SelectByPK", conn);
-
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.Parameters.AddWithValue("@CountryID", Page.RouteData.Values["CountryID"]);
-
-                SqlDataReader read = cmd.ExecuteReader();
-
-                if (read.HasRows)
-                {
-                    while (read.Read())
-                    {
-                        if(!read["CountryCode"].Equals(DBNull.Value))
-                            txtCountryCode.Text = read["CountryCode"].ToString();
-
-                        if (!read["CountryName"].Equals(DBNull.Value))
-                            txtCountryName.Text = read["CountryName"].ToString();
-
-                        
-                    }
-                }
-
-                conn.Close();
+                LoadControls();
             }
+        }
+    }
+
+    #region Load Controls
+    protected void LoadControls()
+    {
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+
+        try
+        {
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
+
+            SqlCommand objCmd = new SqlCommand("PR_Country_SelectByPK", objConn);
+
+            objCmd.CommandType = CommandType.StoredProcedure;
+
+            objCmd.Parameters.AddWithValue("@CountryID", Page.RouteData.Values["CountryID"]);
+
+            SqlDataReader objSDR = objCmd.ExecuteReader();
+
+            if (objSDR.HasRows)
+            {
+                while (objSDR.Read())
+                {
+                    if (!objSDR["CountryCode"].Equals(DBNull.Value))
+                        txtCountryCode.Text = objSDR["CountryCode"].ToString();
+
+                    if (!objSDR["CountryName"].Equals(DBNull.Value))
+                        txtCountryName.Text = objSDR["CountryName"].ToString();
+
+                    break;
+                }
+            }
+
+        }
+        catch (SqlException ex)
+        {
+            lblMessage.Text = ex.Message;
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
         }
     }
     #endregion
@@ -72,7 +83,7 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
 
         if (strErrorMessage != "")
         {
-            lblMsg.Text = strErrorMessage;
+            lblMessage.Text = strErrorMessage;
             return;
         }
         #endregion Server Side Validation
@@ -94,49 +105,47 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
         #endregion Gather Information
 
 
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+
         try
         {
-            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
 
-            conn.Open();
+            SqlCommand objCmd = new SqlCommand();
 
-            SqlCommand cmd = new SqlCommand();
+            objCmd.Connection = objConn;
 
-            cmd.Connection = conn;
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.Parameters.AddWithValue("@CountryName", strCountryName);
 
-            cmd.Parameters.AddWithValue("@CountryName", strCountryName);
+            objCmd.Parameters.AddWithValue("@CountryCode", strCountryCode);
 
-            cmd.Parameters.AddWithValue("@CountryCode", strCountryCode);
-
-            cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
+            objCmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
 
             if (Page.RouteData.Values["CountryID"] != null)
             {
-                cmd.Parameters.AddWithValue("@CountryID", Page.RouteData.Values["CountryID"].ToString());
+                objCmd.Parameters.AddWithValue("@CountryID", Page.RouteData.Values["CountryID"].ToString());
 
-                cmd.CommandText = "PR_Country_UpdateByPK";
+                objCmd.CommandText = "PR_Country_UpdateByPK";
 
-                cmd.ExecuteNonQuery();
+                objCmd.ExecuteNonQuery();
 
-                conn.Close();
-
-                lblMsg.Text = "Data Updated Successfully";
+                objConn.Close();
 
                 Response.Redirect("~/AddressBook/AdminPanel/Country/Display");
             }
             else
             {
-                cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+                if (Session["UserID"] != null)
+                    objCmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
 
-                cmd.CommandText = "PR_Country_Insert";
+                objCmd.CommandText = "PR_Country_Insert";
 
-                cmd.ExecuteNonQuery();
+                objCmd.ExecuteNonQuery();
 
-                conn.Close();
-
-                lblMsg.Text = "Data Inserted Successfully";
+                lblMessage.Text = "Data Inserted Successfully";
 
                 txtCountryCode.Text = "";
                 txtCountryName.Text = "";
@@ -146,13 +155,18 @@ public partial class AdminPanel_Country_CountryAddEdit : System.Web.UI.Page
         {
             if (exec.Number == 2627)
             {
-                lblMsg.Text = "Cannot insert duplicate value";
+                lblMessage.Text = "Cannot insert duplicate value";
                 txtCountryName.Focus();
             }
             else
             {
-                lblMsg.Text = exec.Message.ToString();
+                lblMessage.Text = exec.Message.ToString();
             }
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
         }
     }
     #endregion

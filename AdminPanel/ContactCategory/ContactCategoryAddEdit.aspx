@@ -44,7 +44,7 @@
                     </div>
 
                     <div class="row">
-                        <asp:Label runat="server" ID="txtMsg"></asp:Label>
+                        <asp:Label runat="server" ID="lblMessage"></asp:Label>
                     </div>
                 </div>
             </div>

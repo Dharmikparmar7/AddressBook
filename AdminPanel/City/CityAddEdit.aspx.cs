@@ -12,151 +12,166 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 {
-    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
         {
-            if (Session["UserID"] == null)
-            {
-                Response.Redirect("~/AddressBook/AdminPanel/Login");
-            }
-
             txtCityName.Focus();
 
-            fillCountry();
-
-            ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
-
-            ddlCountry.SelectedValue = "-1";
+            if (Session["UserID"] != null)
+                FillCountryDropdown();
 
             if (Page.RouteData.Values["CityID"] != null)
             {
-                loadControlsByPK();
+                LoadControls();
                 btnAddCity.Text = "Save";
             }
-            else
-            {
-                
-
-                ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
-
-                ddlState.SelectedValue = "-1";
-            }
-
         }
     }
-    #endregion
 
     #region LoadControls
-    private void loadControlsByPK()
+    private void LoadControls()
     {
-        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
-        conn.Open();
-
-        SqlCommand cmd = new SqlCommand("PR_City_SelectByPK", conn);
-
-        cmd.CommandType = CommandType.StoredProcedure;
-
-        cmd.Parameters.AddWithValue("@CityID", Page.RouteData.Values["CityID"].ToString());
-
-        SqlDataReader read = cmd.ExecuteReader();
-
-        if (read.HasRows)
+        try
         {
-            while (read.Read())
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
+
+            SqlCommand objCmd = new SqlCommand("PR_City_SelectByPK", objConn);
+
+            objCmd.CommandType = CommandType.StoredProcedure;
+
+            objCmd.Parameters.AddWithValue("@CityID", Page.RouteData.Values["CityID"].ToString());
+
+            SqlDataReader objSDR = objCmd.ExecuteReader();
+
+            if (objSDR.HasRows)
             {
-                if (!read["CityName"].Equals(DBNull.Value))
-                    txtCityName.Text = read["CityName"].ToString();
+                while (objSDR.Read())
+                {
+                    if (!objSDR["CityName"].Equals(DBNull.Value))
+                        txtCityName.Text = objSDR["CityName"].ToString();
 
-                if (!read["Pincode"].Equals(DBNull.Value))
-                    txtPincode.Text = read["Pincode"].ToString();
+                    if (!objSDR["Pincode"].Equals(DBNull.Value))
+                        txtPincode.Text = objSDR["Pincode"].ToString();
 
-                if (!read["STDCode"].Equals(DBNull.Value))
-                    txtSTDCode.Text = read["STDCode"].ToString();
+                    if (!objSDR["STDCode"].Equals(DBNull.Value))
+                        txtSTDCode.Text = objSDR["STDCode"].ToString();
 
-                if (!read["CountryID"].Equals(DBNull.Value))
-                    ddlCountry.SelectedValue = read["CountryID"].ToString();
+                    if (!objSDR["CountryID"].Equals(DBNull.Value))
+                        ddlCountry.SelectedValue = objSDR["CountryID"].ToString();
 
-                if (!read["StateID"].Equals(DBNull.Value))
-                    ddlState.SelectedValue = read["StateID"].ToString();
+                    if (!objSDR["StateID"].Equals(DBNull.Value))
+                        ddlState.SelectedValue = objSDR["StateID"].ToString();
+
+                    break;
+                }
             }
         }
+        catch (SqlException ex)
+        {
+            lblMessage.Text = ex.Message;
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
 
-        read.Close();
-
-        fillState();
-
-        conn.Close();
+            FillStateDropdown();
+        }
     }
     #endregion LoadControls
 
-    #region FillCountry
-    private void fillCountry()
+    #region Fill Country Dropdown
+    private void FillCountryDropdown()
     {
-        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
-        conn.Open();
+        try
+        {
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
 
-        SqlCommand cmd = new SqlCommand("PR_Country_SelectAllByUserID", conn);
+            SqlCommand objCmd = new SqlCommand("PR_Country_SelectDropdownListByUserID", objConn);
 
-        cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-        if (Session["UserID"] != null)
-            cmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
+            objCmd.Parameters.AddWithValue("@UserID", Session["UserID"].ToString());
 
-        SqlDataReader read = cmd.ExecuteReader();
+            SqlDataReader objSDR = objCmd.ExecuteReader();
 
-        ddlCountry.DataSource = read;
+            ddlCountry.DataSource = objSDR;
 
-        ddlCountry.DataTextField = "CountryName";
+            ddlCountry.DataTextField = "CountryName";
 
-        ddlCountry.DataValueField = "CountryID";
+            ddlCountry.DataValueField = "CountryID";
 
-        ddlCountry.DataBind();
+            ddlCountry.DataBind();
 
-        read.Close();
+            objSDR.Close();
+        }
+        catch (SqlException ex)
+        {
+            lblMessage.Text = ex.Message;
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
 
-        conn.Close();
+            ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
+        }
     }
     #endregion
 
-    #region FillState
-    protected void fillState()
+    #region Fill State Dropdown
+    protected void FillStateDropdown()
     {
-        SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
-        SqlCommand cmd = new SqlCommand("PR_State_DropdownByUserID", conn);
+        try
+        {
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
 
-        conn.Open();
+            SqlCommand objCmd = new SqlCommand("PR_State_SelectDropdownListByUserID", objConn);
 
-        cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-        
-            cmd.Parameters.AddWithValue("@CountryID", (ddlCountry.SelectedValue.ToString()));
+            objCmd.Parameters.AddWithValue("@CountryID", (ddlCountry.SelectedValue.ToString()));
 
-        if (Session["UserID"] != null)
-            cmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
+            objCmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
 
-        SqlDataReader read = cmd.ExecuteReader();
+            SqlDataReader objSDR = objCmd.ExecuteReader();
 
-        ddlState.DataSource = read;
+            ddlState.DataSource = objSDR;
 
-        ddlState.DataTextField = "StateName";
+            ddlState.DataTextField = "StateName";
 
-        ddlState.DataValueField = "StateID";
+            ddlState.DataValueField = "StateID";
 
-        ddlState.DataBind();
+            ddlState.DataBind();
+        }
+        catch (SqlException ex)
+        {
+            lblMessage.Text = ex.Message;
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
 
-        conn.Close();
+            ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
+        }
+
     }
     #endregion
 
     #region Add and Edit
     protected void btnAddCity_Click(object sender, EventArgs e)
     {
-
         #region Local Variables
         SqlInt32 strStateID = SqlInt32.Null;
         SqlString strCityName = SqlString.Null;
@@ -168,88 +183,78 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
         String strErrorMessage = "";
 
         if (ddlCountry.SelectedIndex == 0)
-        {
             strErrorMessage += "Select Country <br/>";
-        }
+
         if (ddlState.SelectedIndex == 0)
-        {
             strErrorMessage += "Select State<br/>";
-        }
+
         if (txtCityName.Text.Trim() == "")
-        {
             strErrorMessage += "Enter City Name<br/>";
-        }
+
         if (strErrorMessage.Trim() != "")
         {
-            txtMsg.Text = strErrorMessage;
+            lblMessage.Text = strErrorMessage;
             return;
         }
         #endregion Server Side Validation
 
         #region Gather Information
         if (ddlState.SelectedIndex > 0)
-        {
             strStateID = Convert.ToInt32(ddlState.SelectedValue);
-        }
+
         if (txtCityName.Text.Trim() != "")
-        {
             strCityName = txtCityName.Text.Trim();
-        }
+
         if (txtPincode.Text.Trim() != "")
-        {
             strPincode = txtPincode.Text.Trim();
-        }
+
         if (txtSTDCode.Text.Trim() != "")
-        {
             strSTDCode = txtSTDCode.Text.Trim();
-        }
         #endregion Gather Information
+
+        SqlConnection objConn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
 
         try
         {
+            if (objConn.State != ConnectionState.Open)
+                objConn.Open();
 
-            SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["AddressBookConnectionString"].ConnectionString);
+            SqlCommand objCmd = new SqlCommand();
 
-            conn.Open();
+            objCmd.Connection = objConn;
 
-            SqlCommand cmd = new SqlCommand();
+            objCmd.CommandType = CommandType.StoredProcedure;
 
-            cmd.Connection = conn;
+            objCmd.Parameters.AddWithValue("@CityName", strCityName);
 
-            cmd.CommandType = CommandType.StoredProcedure;
+            objCmd.Parameters.AddWithValue("@Pincode", strPincode);
 
-            cmd.Parameters.AddWithValue("@CityName", strCityName);
+            objCmd.Parameters.AddWithValue("@STDCode", strSTDCode);
 
-            cmd.Parameters.AddWithValue("@Pincode", strPincode);
-
-            cmd.Parameters.AddWithValue("@STDCode", strSTDCode);
-
-            cmd.Parameters.AddWithValue("@StateID", strStateID);
+            objCmd.Parameters.AddWithValue("@StateID", strStateID);
 
             if (Page.RouteData.Values["CityID"] != null)
             {
-                cmd.Parameters.AddWithValue("@CityID", (Page.RouteData.Values["CityID"].ToString()));
+                objCmd.Parameters.AddWithValue("@CityID", Page.RouteData.Values["CityID"].ToString());
 
-                cmd.CommandText = "PR_City_UpdateByPK";
+                objCmd.CommandText = "PR_City_UpdateByPK";
 
-                cmd.ExecuteNonQuery();
-
-                txtMsg.Text = "Data Updated Successfully";
+                objCmd.ExecuteNonQuery();
 
                 Response.Redirect("~/AddressBook/AdminPanel/City/Display");
             }
             else
             {
                 if (Session["UserID"] != null)
-                    cmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
+                    objCmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
 
-                cmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
+                objCmd.Parameters.AddWithValue("@CreationDate", DateTime.Now);
 
-                cmd.CommandText = "PR_City_Insert";
+                objCmd.CommandText = "PR_City_Insert";
 
-                cmd.ExecuteNonQuery();
+                objCmd.ExecuteNonQuery();
 
-                txtMsg.Text = "Data Inserted Successfully";
+                lblMessage.Text = "Data Inserted Successfully";
                 txtCityName.Text = "";
                 txtPincode.Text = "";
                 txtSTDCode.Text = "";
@@ -257,41 +262,35 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
                 ddlCountry.SelectedIndex = 0;
                 ddlState.Items.Clear();
                 ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
-
-                ddlState.SelectedValue = "-1";
             }
-
-            conn.Close();
         }
-
         catch (SqlException exec)
         {
             if (exec.Number == 2627)
             {
-                txtMsg.Text = "Cannot insert duplicate value";
+                lblMessage.Text = "Cannot insert duplicate value";
                 txtCityName.Focus();
             }
             else
-            {
-                txtMsg.Text = exec.Message.ToString();
-            }
+                lblMessage.Text = exec.Message.ToString();
+        }
+        finally
+        {
+            if (objConn.State == ConnectionState.Open)
+                objConn.Close();
         }
     }
     #endregion
-    
+
     protected void ddlCountry_SelectedIndexChanged(object sender, EventArgs e)
     {
-        fillState();
+        FillStateDropdown();
 
-        ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
-
-        ddlState.SelectedValue = "-1";
-
-        txtMsg.Text = "";
+        lblMessage.Text = "";
     }
-    
+
     protected void ddlState_SelectedIndexChanged(object sender, EventArgs e)
     {
-        txtMsg.Text = "";
+        lblMessage.Text = "";
     }
 }

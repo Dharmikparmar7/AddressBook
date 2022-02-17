@@ -7,7 +7,6 @@ using System.Web.UI.WebControls;
 
 public partial class AdminPanel : System.Web.UI.MasterPage
 {
-    #region PageLoad
     protected void Page_Load(object sender, EventArgs e)
     {
         if (Session["UserID"] == null)
@@ -18,13 +17,11 @@ public partial class AdminPanel : System.Web.UI.MasterPage
         if (!Page.IsPostBack)
         {
             if (Session["ImgProfile"] != null)
-            {
                 imgProfile.ImageUrl = Session["ImgProfile"].ToString();
-            }
-            lbl.Text = Session["FullName"].ToString();
+
+            lblMessage.Text = Session["FullName"].ToString();
         }
     }
-    #endregion
 
     #region LogOut
     protected void btnLogOut_Click(object sender, EventArgs e)
