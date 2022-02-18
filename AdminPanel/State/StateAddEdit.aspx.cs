@@ -58,7 +58,7 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
                         txtStateName.Text = objSDR["StateName"].ToString();
 
                     if (!objSDR["CountryID"].Equals(DBNull.Value))
-                        ddlCountry.SelectedValue = objSDR["CountryID"].ToString();
+                        ddlCountryID.SelectedValue = objSDR["CountryID"].ToString();
 
                     break;
                 }
@@ -96,13 +96,13 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
 
             SqlDataReader objSDR = objCmd.ExecuteReader();
 
-            ddlCountry.DataSource = objSDR;
+            ddlCountryID.DataSource = objSDR;
 
-            ddlCountry.DataTextField = "CountryName";
+            ddlCountryID.DataTextField = "CountryName";
 
-            ddlCountry.DataValueField = "CountryID";
+            ddlCountryID.DataValueField = "CountryID";
 
-            ddlCountry.DataBind();
+            ddlCountryID.DataBind();
         }
         catch (SqlException ex)
         {
@@ -113,7 +113,7 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
             if (objConn.State == ConnectionState.Open)
                 objConn.Close();
 
-            ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
+            ddlCountryID.Items.Insert(0, new ListItem("Select Country", "-1"));
         }
     }
     #endregion
@@ -129,7 +129,7 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
         {
             strErrorMessage += "Enter State Name";
         }
-        if (ddlCountry.SelectedIndex == 0)
+        if (ddlCountryID.SelectedIndex == 0)
         {
             strErrorMessage += "Select Country";
         }
@@ -146,9 +146,9 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
         #endregion Local Variables
 
         #region Gather Information
-        if (ddlCountry.SelectedIndex > 0)
+        if (ddlCountryID.SelectedIndex > 0)
         {
-            strCountryID = Convert.ToInt32(ddlCountry.SelectedValue);
+            strCountryID = Convert.ToInt32(ddlCountryID.SelectedValue);
         }
         if (txtStateName.Text.Trim() != "")
         {
@@ -199,7 +199,7 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
 
                 txtStateName.Text = "";
 
-                ddlCountry.SelectedIndex = 0;
+                ddlCountryID.SelectedIndex = 0;
             }
         }
         catch (SqlException exec)
@@ -219,7 +219,7 @@ public partial class AdminPanel_StateAddEdit : System.Web.UI.Page
     #endregion
 
 
-    protected void ddlCountry_SelectedIndexChanged(object sender, EventArgs e)
+    protected void ddlCountryID_SelectedIndexChanged(object sender, EventArgs e)
     {
         lblMessage.Text = "";
     }

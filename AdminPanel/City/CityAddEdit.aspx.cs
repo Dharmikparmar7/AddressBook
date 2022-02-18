@@ -61,10 +61,10 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
                         txtSTDCode.Text = objSDR["STDCode"].ToString();
 
                     if (!objSDR["CountryID"].Equals(DBNull.Value))
-                        ddlCountry.SelectedValue = objSDR["CountryID"].ToString();
+                        ddlCountryID.SelectedValue = objSDR["CountryID"].ToString();
 
                     if (!objSDR["StateID"].Equals(DBNull.Value))
-                        ddlState.SelectedValue = objSDR["StateID"].ToString();
+                        ddlStateID.SelectedValue = objSDR["StateID"].ToString();
 
                     break;
                 }
@@ -102,13 +102,13 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
             SqlDataReader objSDR = objCmd.ExecuteReader();
 
-            ddlCountry.DataSource = objSDR;
+            ddlCountryID.DataSource = objSDR;
 
-            ddlCountry.DataTextField = "CountryName";
+            ddlCountryID.DataTextField = "CountryName";
 
-            ddlCountry.DataValueField = "CountryID";
+            ddlCountryID.DataValueField = "CountryID";
 
-            ddlCountry.DataBind();
+            ddlCountryID.DataBind();
 
             objSDR.Close();
         }
@@ -121,7 +121,7 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
             if (objConn.State == ConnectionState.Open)
                 objConn.Close();
 
-            ddlCountry.Items.Insert(0, new ListItem("Select Country", "-1"));
+            ddlCountryID.Items.Insert(0, new ListItem("Select Country", "-1"));
         }
     }
     #endregion
@@ -140,19 +140,19 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
 
             objCmd.CommandType = CommandType.StoredProcedure;
 
-            objCmd.Parameters.AddWithValue("@CountryID", (ddlCountry.SelectedValue.ToString()));
+            objCmd.Parameters.AddWithValue("@CountryID", (ddlCountryID.SelectedValue.ToString()));
 
             objCmd.Parameters.AddWithValue("@UserID", (Session["UserID"].ToString()));
 
             SqlDataReader objSDR = objCmd.ExecuteReader();
 
-            ddlState.DataSource = objSDR;
+            ddlStateID.DataSource = objSDR;
 
-            ddlState.DataTextField = "StateName";
+            ddlStateID.DataTextField = "StateName";
 
-            ddlState.DataValueField = "StateID";
+            ddlStateID.DataValueField = "StateID";
 
-            ddlState.DataBind();
+            ddlStateID.DataBind();
         }
         catch (SqlException ex)
         {
@@ -163,7 +163,7 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
             if (objConn.State == ConnectionState.Open)
                 objConn.Close();
 
-            ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
+            ddlStateID.Items.Insert(0, new ListItem("Select State", "-1"));
         }
 
     }
@@ -182,10 +182,10 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
         #region Server Side Validation
         String strErrorMessage = "";
 
-        if (ddlCountry.SelectedIndex == 0)
+        if (ddlCountryID.SelectedIndex == 0)
             strErrorMessage += "Select Country <br/>";
 
-        if (ddlState.SelectedIndex == 0)
+        if (ddlStateID.SelectedIndex == 0)
             strErrorMessage += "Select State<br/>";
 
         if (txtCityName.Text.Trim() == "")
@@ -199,8 +199,8 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
         #endregion Server Side Validation
 
         #region Gather Information
-        if (ddlState.SelectedIndex > 0)
-            strStateID = Convert.ToInt32(ddlState.SelectedValue);
+        if (ddlStateID.SelectedIndex > 0)
+            strStateID = Convert.ToInt32(ddlStateID.SelectedValue);
 
         if (txtCityName.Text.Trim() != "")
             strCityName = txtCityName.Text.Trim();
@@ -259,9 +259,9 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
                 txtPincode.Text = "";
                 txtSTDCode.Text = "";
 
-                ddlCountry.SelectedIndex = 0;
-                ddlState.Items.Clear();
-                ddlState.Items.Insert(0, new ListItem("Select State", "-1"));
+                ddlCountryID.SelectedIndex = 0;
+                ddlStateID.Items.Clear();
+                ddlStateID.Items.Insert(0, new ListItem("Select State", "-1"));
             }
         }
         catch (SqlException exec)
@@ -282,14 +282,14 @@ public partial class AdminPanel_CityAddEdit : System.Web.UI.Page
     }
     #endregion
 
-    protected void ddlCountry_SelectedIndexChanged(object sender, EventArgs e)
+    protected void ddlCountryID_SelectedIndexChanged(object sender, EventArgs e)
     {
         FillStateDropdown();
 
         lblMessage.Text = "";
     }
 
-    protected void ddlState_SelectedIndexChanged(object sender, EventArgs e)
+    protected void ddlStateID_SelectedIndexChanged(object sender, EventArgs e)
     {
         lblMessage.Text = "";
     }

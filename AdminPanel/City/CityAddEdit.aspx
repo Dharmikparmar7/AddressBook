@@ -35,12 +35,12 @@
                 </div>
                 <div class="row">
                     Select Country :
-                    <asp:DropDownList runat="server" ID="ddlCountry" OnSelectedIndexChanged="ddlCountry_SelectedIndexChanged" AutoPostBack="true" CssClass="form-select mt-2 mb-4">
+                    <asp:DropDownList runat="server" ID="ddlCountryID" OnSelectedIndexChanged="ddlCountryID_SelectedIndexChanged" AutoPostBack="true" CssClass="form-select mt-2 mb-4">
                     </asp:DropDownList>
                 </div>
                 <div class="row">
                     Select State :
-                    <asp:DropDownList runat="server" ID="ddlState" AutoPostBack="true" CssClass="form-select mt-2 mb-4" OnSelectedIndexChanged="ddlState_SelectedIndexChanged">
+                    <asp:DropDownList runat="server" ID="ddlStateID" AutoPostBack="true" CssClass="form-select mt-2 mb-4" OnSelectedIndexChanged="ddlStateID_SelectedIndexChanged">
                         <asp:ListItem Value="-1">Select State</asp:ListItem>
                     </asp:DropDownList>
                 </div>

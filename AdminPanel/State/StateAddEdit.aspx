@@ -36,7 +36,7 @@
                     </div>
                     <div class="row">
                         Select Country :
-                        <asp:DropDownList runat="server" ID="ddlCountry" CssClass="form-select mt-2" OnSelectedIndexChanged="ddlCountry_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList>
+                        <asp:DropDownList runat="server" ID="ddlCountryID" CssClass="form-select mt-2" OnSelectedIndexChanged="ddlCountryID_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList>
                     </div>
 
                     <div class="row">

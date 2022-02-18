@@ -46,7 +46,7 @@
 
                         <div class="row">
                             Select Contact Category :
-                            <asp:DropDownList runat="server" ID="ddlContactCategory" CssClass="form-control" OnSelectedIndexChanged="ddlContactCategory_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList>
+                            <asp:DropDownList runat="server" ID="ddlContactCategoryID" CssClass="form-control" OnSelectedIndexChanged="ddlContactCategoryID_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList>
                         </div>
 
                         <div class="row">
@@ -75,19 +75,19 @@
 
                         <div class="row">
                             Select Country :
-                            <asp:DropDownList runat="server" ID="ddlCountry" OnTextChanged="ddlCountry_TextChanged" AutoPostBack="true" CssClass="form-control"></asp:DropDownList>
+                            <asp:DropDownList runat="server" ID="ddlCountryID" OnTextChanged="ddlCountryID_TextChanged" AutoPostBack="true" CssClass="form-control"></asp:DropDownList>
                         </div>
 
                         <div class="row">
                             Select State :
-                            <asp:DropDownList runat="server" ID="ddlState" OnTextChanged="ddlState_TextChanged" AutoPostBack="true" CssClass="form-control">
+                            <asp:DropDownList runat="server" ID="ddlStateID" OnTextChanged="ddlStateID_TextChanged" AutoPostBack="true" CssClass="form-control">
                                 <asp:ListItem Value="-1">Select State</asp:ListItem>
                             </asp:DropDownList>
                         </div>
 
                         <div class="row">
                             Select City :
-                            <asp:DropDownList runat="server" ID="ddlCity" CssClass="form-control" OnSelectedIndexChanged="ddlCity_SelectedIndexChanged" AutoPostBack="true">
+                            <asp:DropDownList runat="server" ID="ddlCityID" CssClass="form-control" OnSelectedIndexChanged="ddlCityID_SelectedIndexChanged" AutoPostBack="true">
                                 <asp:ListItem Value="-1">Select City</asp:ListItem>
                             </asp:DropDownList>
                         </div>
